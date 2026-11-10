@@ -1,9 +1,9 @@
-// Shared look for the Quantum mod: colors, glow rings, glass cards, small widgets.
-// GPUI elements take solid colors and no blur, so a glow is drawn as rings:
-// thin borders around the element, fading out (alpha falls) as they go outward.
+// Shared look for the Quantum mod: colors, neon frames, glass panels, small widgets.
 
 import { div, svg, image } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
+import { appHome } from "herdr";
+import * as fs from "fs/promises";
 
 export const A = "mods/quantum";
 export const C = {
@@ -31,101 +31,96 @@ export function mix(a, b, f) {
   return "#" + x.map((v, i) => hex2(v + (y[i] - v) * f)).join("");
 }
 
-// Edge light: the glow is a thin rim whose brightness and color travel along each edge
-// (bright and cyan where the light hits, fading to a dim violet), with a little light
-// scattered around the bright parts. GPUI has no gradients or blur, so each edge is a
-// row of solid segments, drawn three times: a 1px core and 3px and 7px soft spreads.
-const SEG = 20;
-const gauss = (t, at, w) => Math.exp(-Math.pow((t - at) / w, 2));
+// Neon frames. GPUI draws solid colors only, so the light is a picture: for each lit
+// element the mod measures its size and writes an SVG of exactly that size (a gradient
+// stroke plus two blurred copies of it), cached by size under mods/quantum/.glow/
+// (hidden, so writing it doesn't reload the mod). The stroke's color and brightness travel
+// along the edge: bright cyan at the top-left, dimming through violet, a pink-violet glint
+// at the bottom-right.
 const TONES = {
-  violet: { a: "#6ee7ff", b: "#9b7bff", c: "#d16bff" },
-  cyan: { a: "#bff4ff", b: "#4fd8ff", c: "#7c8cff" },
-  green: { a: "#c8ffe6", b: "#4ef0a6", c: "#2fd0ff" },
-  amber: { a: "#ffe3a8", b: "#ffb547", c: "#ff7ab8" },
+  violet: ["#7cf0ff", "#9b7bff", "#7a5cff", "#d47bff"],
+  cyan: ["#d4f8ff", "#4fd8ff", "#3fa8ff", "#8b6cff"],
+  green: ["#d8ffee", "#4ef0a6", "#2fd0b0", "#4fd8ff"],
+  amber: ["#fff0c8", "#ffb547", "#ff9a4a", "#ff7ab8"],
 };
-const SHAPES = {
-  // The light falls from the top-left: the top and left edges are lit from that corner,
-  // the bottom has a glint left of center, the right edge a faint one high up.
-  panel: {
-    top: (t) => 0.25 + 0.75 * Math.pow(1 - t, 1.6),
-    left: (t) => 0.2 + 0.8 * Math.pow(1 - t, 2),
-    bottom: (t) => 0.18 + 0.82 * gauss(t, 0.4, 0.28),
-    right: (t) => 0.15 + 0.45 * gauss(t, 0.18, 0.3),
-  },
-  // Small things (rows, tabs, pills): lit across the top, a glint along the bottom.
-  item: {
-    top: (t) => 0.45 + 0.55 * gauss(t, 0.3, 0.45),
-    left: (_t) => 0.7,
-    bottom: (t) => 0.2 + 0.6 * gauss(t, 0.6, 0.3),
-    right: (_t) => 0.35,
-  },
-};
+const made = new Map(); // file name -> "pending" | "ready"
 
-function strip(horizontal, thick, alpha, color, bright) {
-  const box = horizontal ? h_flex().w_full().h(thick) : v_flex().h_full().w(thick);
-  return box.children(Array.from({ length: SEG }, (_, i) => {
-    const t = (i + 0.5) / SEG;
-    const seg = div().flex_1().bg(color(t) + hex2(Math.min(1, bright(t) * alpha) * 255));
-    return horizontal ? seg.h_full() : seg.w_full();
-  }));
+function frameSvg(w, h, { radius, tone, spread, strength }) {
+  const [hot, mid, low, glint] = TONES[tone] ?? TONES.violet;
+  const W = w + 2 * spread, H = h + 2 * spread, s = spread, r = Math.min(radius, w / 2, h / 2);
+  const k = (x) => Math.min(1, x * strength).toFixed(3);
+  const grad = `<linearGradient id="g" gradientUnits="userSpaceOnUse" x1="${s}" y1="${s}" x2="${s + w}" y2="${s + h}">`
+    + `<stop offset="0" stop-color="${hot}" stop-opacity="${k(1)}"/>`
+    + `<stop offset="0.22" stop-color="${mid}" stop-opacity="${k(0.85)}"/>`
+    + `<stop offset="0.5" stop-color="${low}" stop-opacity="${k(0.35)}"/>`
+    + `<stop offset="0.78" stop-color="${mid}" stop-opacity="${k(0.55)}"/>`
+    + `<stop offset="1" stop-color="${glint}" stop-opacity="${k(0.95)}"/></linearGradient>`;
+  const f = (id, sd) => `<filter id="${id}" filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><feGaussianBlur stdDeviation="${sd}"/></filter>`;
+  const rect = (sw, extra) => `<rect x="${s}" y="${s}" width="${w}" height="${h}" rx="${r}" fill="none" stroke="url(#g)" stroke-width="${sw}" ${extra}/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${grad}${f("wide", spread * 0.38)}${f("near", 2)}</defs>`
+    + rect(spread * 0.55, `filter="url(#wide)" opacity="0.6"`)
+    + rect(3, `filter="url(#near)" opacity="0.85"`)
+    + rect(1.2, "")
+    + `</svg>`;
 }
 
-function edgeColor(tone, edge) {
-  const k = TONES[tone] ?? TONES.violet;
-  if (edge === "top" || edge === "left") return (t) => (t < 0.5 ? mix(k.a, k.b, t * 2) : mix(k.b, k.c, (t - 0.5) * 1.2));
-  if (edge === "bottom") return (t) => mix(k.b, k.c, gauss(t, 0.7, 0.3));
-  return () => k.b;
-}
-
-// One edge's light alone, for a block whose border the layout draws (the work area's top).
-export function edge(side, { radius = 16, tone = "violet", shape = "panel", strength = 1 } = {}) {
-  const sh = SHAPES[shape] ?? SHAPES.panel;
-  const horizontal = side === "top" || side === "bottom";
-  return div().absolute().top(0).left(0).right(0).bottom(0).children([[1, 1], [3, 0.3], [7, 0.1]].map(([th, al]) => {
-    const off = -Math.floor((th - 1) / 2);
-    const d = div().absolute();
-    const placed = side === "top" ? d.top(off).left(radius).right(radius)
-      : side === "bottom" ? d.bottom(off).left(radius).right(radius)
-      : side === "left" ? d.left(off).top(radius).bottom(radius) : d.right(off).top(radius).bottom(radius);
-    return placed.child(strip(horizontal, th, al * strength, edgeColor(tone, side), sh[side]));
-  }));
-}
-
-// `el` must be rounded `radius` and fill the returned box; the rim is drawn over its edge.
-export function rim(el, { radius = 12, tone = "violet", shape = "panel", strength = 1, pulse = false, spill = true, full = true } = {}) {
-  const sh = SHAPES[shape] ?? SHAPES.panel;
-  const layers = spill ? [[1, 1], [3, 0.3], [7, 0.1]] : [[1, 1], [3, 0.25]];
-  const r = Math.max(4, radius - 1);
-  const parts = [];
-  for (const [th, al] of layers) {
-    const off = -Math.floor((th - 1) / 2);
-    const a = al * strength;
-    parts.push(div().absolute().top(off).left(r).right(r).child(strip(true, th, a, edgeColor(tone, "top"), sh.top)));
-    parts.push(div().absolute().bottom(off).left(r).right(r).child(strip(true, th, a, edgeColor(tone, "bottom"), sh.bottom)));
-    parts.push(div().absolute().left(off).top(r).bottom(r).child(strip(false, th, a, edgeColor(tone, "left"), sh.left)));
-    parts.push(div().absolute().right(off).top(r).bottom(r).child(strip(false, th, a, edgeColor(tone, "right"), sh.right)));
+// The frame picture for an element of `size`, positioned over it (the parent must be
+// `.relative()`); null until it has been written.
+function framePic(cx, size, opts) {
+  if (!size) return null;
+  const w = Math.round(size.width), h = Math.round(size.height);
+  if (w < 4 || h < 4) return null;
+  const { radius, tone, spread, strength } = opts;
+  const name = `${tone}-${radius}-${spread}-${Math.round(strength * 100)}-${w}x${h}.svg`;
+  const rel = `${A}/.glow/${name}`;
+  const state = made.get(name);
+  if (state === "ready") return image(rel).absolute().left(-spread).top(-spread).w(w + 2 * spread).h(h + 2 * spread);
+  if (!state) {
+    made.set(name, "pending");
+    cx.spawn(async (cx) => {
+      try {
+        const dir = `${appHome()}/${A}/.glow`;
+        if (!(await fs.exists(`${dir}/${name}`))) {
+          await fs.mkdir(dir, { recursive: true });
+          await fs.writeFile(`${dir}/${name}`, frameSvg(w, h, { radius, tone, spread, strength }));
+        }
+        made.set(name, "ready");
+        cx.notify();
+      } catch (_) { made.delete(name); }
+    });
   }
-  const light = div().absolute().top(0).left(0).right(0).bottom(0).children(parts);
-  return div().relative().when(full, (d) => d.w_full())
-    .child(el)
-    .child(pulse ? light.loop("opacity", { from: 0.55, to: 1, period: 1800 }) : light);
+  return null;
 }
 
-// Kept names used by the roles: an item with a rim, or as is.
-export function lit(el, on, tone, radius, opts = {}) {
-  return on ? rim(el, { radius, tone, shape: "item", ...opts }) : el;
+// `el` (rounded `radius`) with a neon frame when `on`. `view.sizes` keeps measured sizes;
+// `key` must be unique in the mod copy.
+export function neon(view, cx, key, el, { on = true, radius = 12, tone = "violet", spread = 10, strength = 1, pulse = false, full = true } = {}) {
+  const box = div().id(`nz-${key}`).relative().when(full, (d) => d.w_full())
+    .on_size_change((size, cx) => {
+      const old = view.sizes[key];
+      if (!old || Math.round(old.width) !== Math.round(size.width) || Math.round(old.height) !== Math.round(size.height)) {
+        view.sizes[key] = size; cx.notify();
+      }
+    })
+    .child(el);
+  if (!on) return box;
+  const pic = framePic(cx, view.sizes[key], { radius, tone, spread, strength });
+  return pic ? box.child(pulse ? pic.loop("opacity", { from: 0.55, to: 1, period: 1800 }) : pic) : box;
 }
 
-// A glass panel filling its block: dim base border, edge light, a spot of light where it's
-// brightest. Leaves `margin` px around it for the spill.
-export function panel(content, { radius = 18, tone = "violet", strength = 1, pad = 0, margin = 6, id } = {}) {
-  const k = TONES[tone] ?? TONES.violet;
-  const box = div().size_full().rounded(radius).bg(C.glass).border(1).border_color(k.b + "40").overflow_hidden().p(pad).child(content);
-  const out = div().size_full().p(margin).child(
-    div().relative().size_full()
-      .child(box)
-      .child(halo("cyan", 90, radius * 0.7, radius * 0.7, 0.45 * strength))
-      .child(rim(div().size_full(), { radius, tone, strength }).absolute().top(0).left(0).right(0).bottom(0)));
+// A glass panel filling its block, framed in neon. Leaves `margin` px around it for the light.
+export function panel(view, cx, key, content, { radius = 18, tone = "violet", strength = 1, margin = 10, pad = 0, id } = {}) {
+  const box = div().size_full().rounded(radius).bg(C.glass).border(1).border_color("#9b7bff30").overflow_hidden().p(pad).child(content);
+  const inner = div().id(`pz-${key}`).relative().size_full()
+    .on_size_change((size, cx) => {
+      const old = view.sizes[key];
+      if (!old || Math.round(old.width) !== Math.round(size.width) || Math.round(old.height) !== Math.round(size.height)) {
+        view.sizes[key] = size; cx.notify();
+      }
+    })
+    .child(box);
+  const pic = framePic(cx, view.sizes[key], { radius, tone, spread: margin, strength });
+  const out = div().size_full().p(margin).child(pic ? inner.child(pic) : inner);
   return id ? out.id(id) : out;
 }
 
@@ -143,12 +138,11 @@ export function programIcon(p, size, color = C.text) {
   return p.tint ? svg(p.icon).size(size).flex_none().text_color(p.color ?? color) : image(p.icon).w(size).h(size).flex_none();
 }
 
-// A gradient bar from solid segments, cyan to violet, glowing (and breathing when `live`).
-export function bar(pct, w, { h = 8, live = false } = {}) {
+// A gradient bar from solid segments, cyan to violet.
+export function bar(pct, w, { h = 8 } = {}) {
   const n = 30, seg = w / n, filled = Math.round((Math.max(0, Math.min(100, pct)) / 100) * n);
-  const track = h_flex().w(w).h(h).rounded(h / 2).overflow_hidden().bg("#ffffff14").children(
+  return h_flex().w(w).h(h).rounded(h / 2).overflow_hidden().bg("#ffffff14").children(
     Array.from({ length: filled }, (_, i) => div().h_full().w(seg).flex_none().bg(mix(C.cyan, C.violet, i / (n - 1)))));
-  return div().w(w).child(rim(track, { radius: h / 2, tone: "cyan", shape: "item", strength: live ? 1.2 : 0.6, pulse: live, full: false }));
 }
 
 const TILES = ["#22c55e", "#f97316", "#6d7cff", "#a855f7", "#16a34a", "#ec4899", "#14b8a6", "#3b82f6", "#eab308", "#ef4444"];

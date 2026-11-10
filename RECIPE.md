@@ -18,16 +18,15 @@ live Session panel side by side; then a status bar.
   - a ringed planet near the top right, its ring glowing and tilted −16°;
   - a horizon planet whose rim is a white line with a violet bloom and a lens flare at the top;
   - neon swirls in the lower corners.
-- **Edge light:** the look shared by every card.
-  - **Core line:** 1px, its brightness and color changing along the edge.
-  - **Spill:** two wider strips (3px at 30% and 7px at 10%) that follow the core line, so light
-    scatters only where the line is bright.
-  - **Panels:** light falls from the top-left. The top and left edges run cyan `#6ee7ff` →
-    violet `#9b7bff` → pink `#d16bff` and fade along their length. The bottom has a glint left of
-    center, the right edge a faint one high up. There is also a soft cyan spot of light
-    (`halo-cyan.png`) on the top-left corner.
-  - **Items:** active rows, tabs and pills have the same light, lit across the top.
-  - **Base:** every glass card is fill `#0c0f34c4` with a 1px `#9b7bff40` border.
+- **Neon frames:** the look shared by every card.
+  - **Line:** each lit card or item has a thin neon line. Its color and brightness travel along
+    the edge: bright cyan `#7cf0ff` at the top-left, violet `#9b7bff` dimming to `#7a5cff` around
+    the middle, and a pink-violet `#d47bff` glint at the bottom-right.
+  - **Light:** two blurred copies of the line (wide and near) let the light spill softly
+    outside the card and a little inside it.
+  - **Glass:** cards are fill `#0c0f34c4`.
+  - **Work area:** its border comes from the layout, so it is a `#b9a4ffb0` line with nine faint
+    outer rings instead.
 - **Title bar (56px, draggable):**
   - The atom logo over a violet halo, and "Herdr" at 23px bold.
   - A 38px pill search field with an edge light and the palette key on a keycap.
@@ -48,9 +47,8 @@ live Session panel side by side; then a status bar.
   - **Footer:** Settings and Add machine.
 - **Work area:**
   - Glass `#0b0e30b0`, radius 16, a `#9b7bff66` border and three faint outer rings.
-  - **Tab bar (44px):** a grid button (picker), the tabs as 32px pills, then +, Files and Changes.
-    The active tab is a violet glass pill with an edge light. The top edge of the work area is lit
-    by the tab bar mod.
+  - **Tab bar (44px):** a grid button (picker), the tabs as 32px pills, then +. The active tab
+    is a violet glass pill in a neon frame. Files and Changes live only in the Session header.
   - **Panes:** cards with radius 12 and a `#8b6cff66` border; the focused pane's border is cyan.
     Each has Herdr's `pane` header.
   - **Terminals:** opacity 0.86 over `#090b26`.
@@ -102,8 +100,7 @@ live Session panel side by side; then a status bar.
   - Root settings: `titlebar: "none"`, `theme: "quantum"` plus `colors` overrides,
     `terminal_opacity: 0.86`, and the background image.
 - **Mod:** `mods/quantum`.
-  - `main.js` holds the five roles. `ui.js` holds the palette, `rim` (edge light),
-    `edge` (one lit edge), `panel`, `lit`, `bar`, `halo`, letter tiles, status marks and `ago`.
+  - `main.js` holds the five roles. `ui.js` holds the palette, `neon` (a framed element), `panel`, `bar`, `halo`, letter tiles, status marks and `ago`.
 - **Shipped mods used:** `pane` (pane headers), `files`, `changes`; `new-menu`, `menu`, `picker`
   and `machine-add` as overlays. Some icons come from `mods/workspace-chrome`, `mods/pane`,
   `mods/files` and `mods/changes`.
@@ -130,20 +127,22 @@ live Session panel side by side; then a status bar.
 ## Watch out
 
 - **Light without CSS:** elements take solid colors only (no gradients, blur or colored
-  shadows). So:
-  - each lit edge is a row of 20 solid segments, and the spill is the same row drawn wider and
-    fainter;
-  - lights sit in `absolute` children of a `relative` box, so they never move the layout;
-  - the edges start `radius` px from each corner, so corners keep the dim base border.
+  shadows), and `image()` never stretches. So the neon is a picture of exactly the element's
+  size:
+  - `on_size_change` measures each lit element;
+  - `ui.js` writes an SVG of that size (a gradient stroke plus two `feGaussianBlur` copies) to
+    `mods/quantum/.glow/`, named by tone, radius, spread and size;
+  - the SVG is shown as an `absolute` image over the element.
+  The folder is hidden, so writing to it doesn't reload the mod. Drawing the light from solid
+  segments or stacked borders looked broken (gaps at corners, banding).
 - **Images don't stretch:** `image()` keeps its aspect ratio, so glows from pictures only work
   for round spots (`halo`).
 - **Padding:** it is a number or `[vertical, horizontal]`. Theme files take `#rrggbb` only;
   translucency goes in the layout's `colors` as `#rrggbbaa`.
 - **Image cache:** the app caches images by path. Rename a picture (as `nebula.jpg` became
   `space.jpg`) to see a new version at once.
-- **Layout borders:** the work area's border comes from the layout, so it can't be
-  gradient-lit. Only its top edge is lit, by the tab bar mod (work `padding: 0`, so the tab bar
-  touches it).
+- **Layout borders:** the work area's border comes from the layout, so it can't carry a neon
+  picture. It gets a plain line and faint rings.
 - **Meters:** CPU needs two samples (it appears on the second refresh). CPU and RAM are Linux
   only and measure the machine the window runs on.
 - **Parsing:** it expects Claude Code's look (`●` tool calls, `─────` lines around the prompt).

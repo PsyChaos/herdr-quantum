@@ -76,8 +76,8 @@
           "id": "work-frame",
           "type": "column",
           "padding": [
-            4,
-            3
+            1,
+            0
           ],
           "size": {
             "weight": 1
@@ -85,13 +85,13 @@
           "resizable": false,
           "children": [
             {
-              "id": "work-glow3",
+              "id": "work-glow9",
               "type": "column",
-              "radius": 19,
+              "radius": 25,
               "padding": 0,
               "border": {
                 "width": 1,
-                "color": "#8b6cff0c"
+                "color": "#7f61ff03"
               },
               "size": {
                 "weight": 1
@@ -99,13 +99,13 @@
               "resizable": false,
               "children": [
                 {
-                  "id": "work-glow2",
+                  "id": "work-glow8",
                   "type": "column",
-                  "radius": 18,
+                  "radius": 24,
                   "padding": 0,
                   "border": {
                     "width": 1,
-                    "color": "#8b6cff1c"
+                    "color": "#8467ff07"
                   },
                   "size": {
                     "weight": 1
@@ -113,13 +113,13 @@
                   "resizable": false,
                   "children": [
                     {
-                      "id": "work-glow1",
+                      "id": "work-glow7",
                       "type": "column",
-                      "radius": 17,
+                      "radius": 23,
                       "padding": 0,
                       "border": {
                         "width": 1,
-                        "color": "#8b6cff38"
+                        "color": "#886cff0e"
                       },
                       "size": {
                         "weight": 1
@@ -127,88 +127,190 @@
                       "resizable": false,
                       "children": [
                         {
-                          "id": "work",
+                          "id": "work-glow6",
                           "type": "column",
+                          "radius": 22,
                           "padding": 0,
+                          "border": {
+                            "width": 1,
+                            "color": "#8d71ff18"
+                          },
+                          "size": {
+                            "weight": 1
+                          },
                           "resizable": false,
                           "children": [
                             {
-                              "id": "tabs",
-                              "type": "block",
-                              "size": {
-                                "px": 44
+                              "id": "work-glow5",
+                              "type": "column",
+                              "radius": 21,
+                              "padding": 0,
+                              "border": {
+                                "width": 1,
+                                "color": "#9277ff25"
                               },
-                              "window_drag": true,
-                              "content": {
-                                "mod": "quantum",
-                                "props": {
-                                  "role": "tabs"
-                                }
-                              }
-                            },
-                            {
-                              "id": "work-body",
-                              "type": "row",
-                              "padding": 8,
-                              "gap": 8,
+                              "size": {
+                                "weight": 1
+                              },
+                              "resizable": false,
                               "children": [
                                 {
-                                  "id": "main",
-                                  "type": "block",
-                                  "content": {
-                                    "tab": "active",
-                                    "pane": {
-                                      "gap": 8,
-                                      "radius": 12,
-                                      "background": "background",
-                                      "lone": true,
-                                      "border": {
-                                        "width": 1,
-                                        "color": "#8b6cff66"
-                                      },
-                                      "focus": {
-                                        "width": 1,
-                                        "color": "#4fd8ff"
-                                      },
-                                      "header": {
-                                        "content": {
-                                          "mod": "pane"
-                                        },
-                                        "height": 32,
-                                        "position": "top",
-                                        "reveal": "always"
-                                      }
-                                    }
-                                  }
-                                },
-                                {
-                                  "id": "panel",
+                                  "id": "work-glow4",
                                   "type": "column",
-                                  "hidden": true,
-                                  "size": {
-                                    "px": 368
+                                  "radius": 20,
+                                  "padding": 0,
+                                  "border": {
+                                    "width": 1,
+                                    "color": "#977cff34"
                                   },
-                                  "min": 280,
-                                  "max": 900,
+                                  "size": {
+                                    "weight": 1
+                                  },
+                                  "resizable": false,
                                   "children": [
                                     {
-                                      "id": "panel-body",
-                                      "type": "stack",
-                                      "active": "files",
+                                      "id": "work-glow3",
+                                      "type": "column",
+                                      "radius": 19,
+                                      "padding": 0,
+                                      "border": {
+                                        "width": 1,
+                                        "color": "#9b81ff43"
+                                      },
+                                      "size": {
+                                        "weight": 1
+                                      },
+                                      "resizable": false,
                                       "children": [
                                         {
-                                          "id": "files",
-                                          "type": "block",
-                                          "content": {
-                                            "mod": "files"
-                                          }
-                                        },
-                                        {
-                                          "id": "changes",
-                                          "type": "block",
-                                          "content": {
-                                            "mod": "changes"
-                                          }
+                                          "id": "work-glow2",
+                                          "type": "column",
+                                          "radius": 18,
+                                          "padding": 0,
+                                          "border": {
+                                            "width": 1,
+                                            "color": "#a087ff4e"
+                                          },
+                                          "size": {
+                                            "weight": 1
+                                          },
+                                          "resizable": false,
+                                          "children": [
+                                            {
+                                              "id": "work-glow1",
+                                              "type": "column",
+                                              "radius": 17,
+                                              "padding": 0,
+                                              "border": {
+                                                "width": 1,
+                                                "color": "#a58cff52"
+                                              },
+                                              "size": {
+                                                "weight": 1
+                                              },
+                                              "resizable": false,
+                                              "children": [
+                                                {
+                                                  "id": "work",
+                                                  "type": "column",
+                                                  "padding": 0,
+                                                  "resizable": false,
+                                                  "children": [
+                                                    {
+                                                      "id": "tabs",
+                                                      "type": "block",
+                                                      "size": {
+                                                        "px": 44
+                                                      },
+                                                      "window_drag": true,
+                                                      "content": {
+                                                        "mod": "quantum",
+                                                        "props": {
+                                                          "role": "tabs"
+                                                        }
+                                                      }
+                                                    },
+                                                    {
+                                                      "id": "work-body",
+                                                      "type": "row",
+                                                      "padding": 8,
+                                                      "gap": 8,
+                                                      "children": [
+                                                        {
+                                                          "id": "main",
+                                                          "type": "block",
+                                                          "content": {
+                                                            "tab": "active",
+                                                            "pane": {
+                                                              "gap": 8,
+                                                              "radius": 12,
+                                                              "background": "background",
+                                                              "lone": true,
+                                                              "border": {
+                                                                "width": 1,
+                                                                "color": "#8b6cff66"
+                                                              },
+                                                              "focus": {
+                                                                "width": 1,
+                                                                "color": "#4fd8ff"
+                                                              },
+                                                              "header": {
+                                                                "content": {
+                                                                  "mod": "pane"
+                                                                },
+                                                                "height": 32,
+                                                                "position": "top",
+                                                                "reveal": "always"
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        {
+                                                          "id": "panel",
+                                                          "type": "column",
+                                                          "hidden": true,
+                                                          "size": {
+                                                            "px": 368
+                                                          },
+                                                          "min": 280,
+                                                          "max": 900,
+                                                          "children": [
+                                                            {
+                                                              "id": "panel-body",
+                                                              "type": "stack",
+                                                              "active": "files",
+                                                              "children": [
+                                                                {
+                                                                  "id": "files",
+                                                                  "type": "block",
+                                                                  "content": {
+                                                                    "mod": "files"
+                                                                  }
+                                                                },
+                                                                {
+                                                                  "id": "changes",
+                                                                  "type": "block",
+                                                                  "content": {
+                                                                    "mod": "changes"
+                                                                  }
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  ],
+                                                  "background": "#0b0e30b0",
+                                                  "radius": 16,
+                                                  "border": {
+                                                    "width": 1,
+                                                    "color": "#b9a4ffb0"
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          ]
                                         }
                                       ]
                                     }
@@ -216,13 +318,7 @@
                                 }
                               ]
                             }
-                          ],
-                          "background": "#0b0e30b0",
-                          "radius": 16,
-                          "border": {
-                            "width": 1,
-                            "color": "#9b7bff66"
-                          }
+                          ]
                         }
                       ]
                     }
