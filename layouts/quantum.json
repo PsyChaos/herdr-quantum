@@ -26,7 +26,7 @@
     14,
     12
   ],
-  "terminal_opacity": 0.86,
+  "terminal_opacity": 0,
   "background": {
     "image": "mods/quantum/space.jpg",
     "fit": "cover"
@@ -133,8 +133,8 @@
                             "tab": "active",
                             "pane": {
                               "gap": 8,
-                              "radius": 8,
-                              "background": "background",
+                              "radius": 18,
+                              "background": "#00000000",
                               "lone": true,
                               "border": {
                                 "width": 1,
@@ -142,7 +142,7 @@
                               },
                               "focus": {
                                 "width": 1,
-                                "color": "#c4b2ff55"
+                                "color": "#8b6cff00"
                               },
                               "header": {
                                 "content": {
@@ -191,7 +191,13 @@
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "background": "#0e1236e0",
+                      "radius": 18,
+                      "border": {
+                        "width": 1,
+                        "color": "#dcd2ffee"
+                      }
                     },
                     {
                       "id": "edge-right",

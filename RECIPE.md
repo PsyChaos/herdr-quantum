@@ -156,8 +156,15 @@ live Session panel side by side; then a status bar.
     slices, offset by the card size;
   - the tab bar measures the width, the sidebar the body height, and both share them
     (`quantum.bodyH`, `quantum.card`).
-- **Square corners:** pane backgrounds are drawn square even with a radius, so the neon line
-  runs 4px outside the panes, letting its rounded corners clear the square ones.
+- **Square corners:** a terminal paints its background over its whole pane, square, whatever
+  the pane radius. So:
+  - `terminal_opacity` is 0 and pane backgrounds are transparent;
+  - the card's fill comes from the `work-body` node: `#0e1236e0`, radius 18, which layout
+    nodes do round;
+  - the crisp line is that node's own `border` (`#dcd2ffee`), since it follows the rounded
+    corners;
+  - the edge strips add only the coloured light, cyan on the left to violet-pink on the
+    right. They can't reach into the card's corners.
 - **Meters:** CPU needs two samples (it appears on the second refresh). CPU and RAM are Linux
   only and measure the machine the window runs on.
 - **Parsing:** it expects Claude Code's look (`●` tool calls, `─────` lines around the prompt).

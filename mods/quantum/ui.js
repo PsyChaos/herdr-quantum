@@ -88,20 +88,21 @@ export function ensurePic(cx, name, make) {
 
 // The terminal card's neon, for a card W×H (in card coordinates; the panes fill it but for
 // the 12px edge strips on its sides and bottom). The picture is W wide and H + spread tall:
-// `spread` px above the card for the light over its top edge. The line runs 4px outside the
-// panes, so its rounded corners clear their square ones: cyan at the top-left, dim violet
+// `spread` px above the card for the light over its top edge. Only the light: the crisp,
+// rounded line is the work-body node's own border (the strips can't reach into the
+// card's corners). The light is coloured: cyan at the top-left, dim violet
 // along the top, bright violet-pink along the bottom.
 export function cardSvg(W, H, { radius = 12, spread = 12 } = {}) {
-  const s = spread, PH = H + s, gap = 4;
+  const s = spread, PH = H + s, gap = 0;
   const x0 = 12 - gap - 0.5, yTop = s - gap + 0.5, yBot = s + H - 12 + gap - 0.5;
   const w = W - 2 * x0, h = yBot - yTop;
   const blur = (id, sd) => `<filter id="${id}" filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${PH}"><feGaussianBlur stdDeviation="${sd}"/></filter>`;
-  const grad = `<linearGradient id="g" gradientUnits="userSpaceOnUse" x1="${x0}" y1="${yTop}" x2="${x0 + w * 0.3}" y2="${yBot}">`
-    + `<stop offset="0" stop-color="#7cf0ff" stop-opacity="1"/><stop offset="0.25" stop-color="#a48bff" stop-opacity="0.7"/>`
-    + `<stop offset="0.65" stop-color="#9b7bff" stop-opacity="0.8"/><stop offset="1" stop-color="#e58bff" stop-opacity="1"/></linearGradient>`;
-  const rect = (sw, extra) => `<rect x="${x0}" y="${yTop}" width="${w}" height="${h}" rx="${radius}" fill="none" stroke="url(#g)" stroke-width="${sw}" ${extra}/>`;
+  const grad = `<linearGradient id="g" gradientUnits="userSpaceOnUse" x1="${x0}" y1="0" x2="${x0 + w}" y2="0">`
+    + `<stop offset="0" stop-color="#4fe0ff"/><stop offset="0.35" stop-color="#7c8cff"/>`
+    + `<stop offset="0.7" stop-color="#9b7bff"/><stop offset="1" stop-color="#d47bff"/></linearGradient>`;
+  const rect = (sw, extra) => `<rect x="${x0}" y="${yTop}" width="${w}" height="${h}" rx="${radius + gap}" fill="none" stroke="url(#g)" stroke-width="${sw}" ${extra}/>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${PH}" viewBox="0 0 ${W} ${PH}"><defs>${grad}${blur("w", 3.5)}${blur("n", 1.4)}</defs>`
-    + rect(6, `filter="url(#w)" opacity="0.6"`) + rect(2.6, `filter="url(#n)" opacity="0.85"`) + rect(1.4, "") + `</svg>`;
+    + rect(8, `filter="url(#w)" opacity="0.85"`) + rect(3, `filter="url(#n)" opacity="1"`) + `</svg>`;
 }
 
 // A context bar as a picture: a rounded track, a rounded cyan → blue → violet → pink fill,
