@@ -210,7 +210,8 @@ export default class Quantum extends View {
         () => {
           const all = spaces();
           const tabOf = (a) => all.find((s) => s.id === a.space)?.tabs.find((t) => t.id === a.tab);
-          openOverlay({ mod: "quantum", kind: "popup", width: 360, height: bellHeight(agents(), tabOf), props: { role: "bell" } });
+          const height = bellHeight(agents(), tabOf);
+          openOverlay({ mod: "quantum", kind: "popup", width: 360, height, props: { role: "bell", height } });
         }))
       .child(btn("q-help", icon("help", 19, C.muted), () => run("app.help")))
       .child(btn("q-settings", svg("mods/workspace-chrome/settings.svg").size(19), () => run("app.settings")))
@@ -541,7 +542,7 @@ export default class Quantum extends View {
         .child(div().flex_1().font_semibold().text_size(13).text_color("#ffffff").child("Notifications"))
         .when(needs.length + done.length > 0, (el) => el.child(div().text_size(11.5).text_color(C.dim).child(`${needs.length + done.length} new`))))
       .child(kids.length
-        ? v_flex().id("q-bell-list").flex_none().h(bellHeight(agents(), tabOf) - BELL.head - 2).pb(4).overflow_y_scrollbar().children(kids)
+        ? v_flex().id("q-bell-list").flex_none().h((props()?.height ?? bellHeight(agents(), tabOf)) - BELL.head - 2).pb(4).overflow_y_scrollbar().children(kids)
         : div().h(BELL.empty).flex_none().flex().items_center().justify_center().text_size(12.5).text_color(C.muted).child("No notifications"));
   }
 
