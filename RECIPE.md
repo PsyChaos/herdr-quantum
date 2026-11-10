@@ -294,7 +294,12 @@ shipped with Herdr.
 `layout.show` / `layout.hide { id: "panel" }`, `layout.select { stack, child }` (`panel-body`
 to `files`/`changes`; `side-body` to `side-session`/`side-tasks`).
 
-**Shipped mods used:** `files` and `changes` (side panel blocks); `menu` (tab menu popup 200px
+**Panel copies:** `quantum-files` and `quantum-changes` (the side panel blocks) are Herdr's shipped
+`files` and `changes` mods copied by `tools/fork-panels.py quantum 2 1`: every `rounded()` removed
+(Herdr's own panels draw a rounded frame that showed inside the square one), text 2px larger,
+Apache-2.0 `LICENSE` in each folder.
+
+**Shipped mods used:** `menu` (tab menu popup 200px
 wide with `{ tab: "tab", target: { id, space } }`; pane menu popup 220px wide with
 `{ tab: "pane", target: { pane, terminal } }`); `new-menu` (popup 250 × 512); `picker` and
 `machine-add` (`mod.open`). Icons borrowed from them: `mods/workspace-chrome/` `search`,
