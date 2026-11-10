@@ -4,7 +4,7 @@ larger-text variants (Herdr is Apache-2.0; see mods/<prefix>-files/LICENSE).
 
     python3 tools/fork-panels.py <prefix> <text +px> <border px> [herdr-app home]
 
-e.g. `python3 tools/fork-panels.py arcade 4 2` writes mods/arcade-files and mods/arcade-changes
+e.g. `python3 tools/fork-panels.py arcade 2 2` writes mods/arcade-files and mods/arcade-changes
 from ~/.config/herdr-app/mods/{files,changes}. Run it again after a Herdr update to pick up its
 changes; the layout names the copies instead of the shipped mods.
 """
@@ -34,7 +34,8 @@ for name in ("files", "changes"):
     code = re.sub(r"\.text_size\((\d+(?:\.\d+)?)\)", lambda m: f".text_size({num(float(m.group(1)) + grow)})", code)
     code = code.replace("@@)", ")")
     code = re.sub(r"font_size: (\d+)", lambda m: f"font_size: {num(float(m.group(1)) + min(grow, 2))}", code)
-    code = re.sub(r"\.h\(28\)", f".h({num(28 + min(6, max(0, grow - 1)))})", code)  # rows grow a little with the text
+    row = num(28 + min(6, max(0, grow - 1)))                                        # rows grow a little with the text
+    code = re.sub(r"\.h\(28\)", f".h({row})", code).replace("* 28 +", f"* {row} +")
     if border != 1:
         code = code.replace(".border_1().border_color(t.border)", f".border({border}).border_color(t.border)")
     head = (f"// Modified from Herdr's shipped `{name}` mod (Apache License 2.0, see LICENSE here):\n"
