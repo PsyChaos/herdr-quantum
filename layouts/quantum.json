@@ -84,7 +84,7 @@
               "id": "tabs",
               "type": "block",
               "size": {
-                "px": 62
+                "px": 47
               },
               "window_drag": true,
               "content": {
@@ -109,7 +109,7 @@
                       "id": "edge-left",
                       "type": "block",
                       "size": {
-                        "px": 16
+                        "px": 13
                       },
                       "resizable": false,
                       "content": {
@@ -133,16 +133,16 @@
                             "tab": "active",
                             "pane": {
                               "gap": 8,
-                              "radius": 12,
+                              "radius": 0,
                               "background": "#00000000",
                               "lone": true,
                               "border": {
-                                "width": 1,
-                                "color": "#8b6cff00"
+                                "width": 0,
+                                "color": "#00000000"
                               },
                               "focus": {
-                                "width": 1,
-                                "color": "#8b6cff00"
+                                "width": 0,
+                                "color": "#00000000"
                               },
                               "header": {
                                 "content": {
@@ -198,7 +198,7 @@
                       "id": "edge-right",
                       "type": "block",
                       "size": {
-                        "px": 16
+                        "px": 13
                       },
                       "resizable": false,
                       "content": {
@@ -215,7 +215,7 @@
                   "id": "edge-bottom",
                   "type": "block",
                   "size": {
-                    "px": 16
+                    "px": 13
                   },
                   "resizable": false,
                   "content": {
@@ -244,7 +244,7 @@
               "id": "side-tabs",
               "type": "block",
               "size": {
-                "px": 64
+                "px": 62
               },
               "content": {
                 "mod": "quantum",

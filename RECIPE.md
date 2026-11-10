@@ -31,12 +31,11 @@ live Session panel side by side; then a status bar.
   - **Light:** a wide blurred copy in `#5a4cff` and a near one spill the light around the card.
   - **Glass:** panels are nearly opaque navy `#0d1338ea`; the session cards `#0c1232ee`.
   - **Selected items** (the active space, focused and working agents, the active tab, the
-    Session switch): a blue frame (`#eef6ff` line, `#3f66ff` light) whose picture also paints
-    the fill, navy `#18205e` with a blue inner glow brighter at the top and bottom, so the item
-    looks lit and slightly raised. The picture sits behind the item's content.
-  - **Terminal card:** the brightest frame. Its light is pink-violet `#e08bff` on the left,
-    blue in the middle, cyan `#3fd8ff` on the right, with a bright pink `#f0a8ff` bloom along
-    the bottom. Fill `#0a1030f2`, line `#e2d6ff`.
+    Session switch): a dark navy fill `#131a4a` with a blue light just inside its edges and a
+    thin bright outline (near-white lilac to blue to violet; cyan-led for the tab and the
+    switch), with a faint glow outside. The picture carries the fill and sits behind the
+    item's content.
+  - **Terminal card:** a thin blue rim, brightest along the top; fill `#0b1131`.
 - **Title bar (56px, draggable):**
   - The atom logo (42px) over a violet halo, and "Herdr" at 25px bold.
   - A 38px pill search field with an edge light and the palette key on a keycap.
@@ -57,24 +56,33 @@ live Session panel side by side; then a status bar.
   - **Sub-agents:** nested under their parent with "└". Clicking the parent's icon folds them.
   - **Footer:** Settings and Add machine.
 - **Work area:**
-  - **Tab bar (62px):** a 46px row with a grid button (picker), the tabs as 32px pills, then +;
-    under it the card's top slice. The active tab is lit like a selected item and sits 6px
-    above the card's light.
-  - **Card:** one rounded rim (radius 16) round all the panes, unbroken at the corners. The
-    panes sit 6px inside it.
-  - **Panes:** transparent, with no border of their own.
-  - **Pane header (38px, `role: "pane"`):** a `#121842` band with top corners of radius 10
-    (concentric with the card's) and a `#2e3488` line under it:** the program icon and name, the folder in dim text,
+  - **Tab bar (47px):** a grid button (picker) and the tabs as 30px boxes (radius 8) standing
+    on the card's rim, with no gap; under them the card's top slice. Inactive tabs are dark
+    `#161a42` with a thin `#2e3270` border; the active tab is dark too, with a thin outline
+    running pink-violet at the top-left to cyan on the right and a faint glow. No + button
+    (the pane header's + and the new-tab keys make tabs).
+  - **Card:** one rounded rim (radius 14) round all the panes, unbroken at the corners: a
+    1.5px blue line (cyan toward the right), brightest along the top, with a gentle blue glow.
+    The panes sit 5px inside it.
+  - **Panes:** transparent, with no border or radius of their own.
+  - **Pane header (38px, `role: "pane"`):** a `#1a2254` band with a `#454c86` line under it.
+    The card picture paints the same band and line out to the rim, so the header runs full
+    width:** the program icon and name, the folder in dim text,
     the status, then `+` (split right), Files, Changes and `⋮` (the pane menu). Files and
     Changes appear only here.
   - **Terminals:** `terminal_opacity` 0, over the card's own fill.
 - **Right column (330px):**
-  - **Header (`role: "sidetabs"`, 64px):** a segmented control in a dim blue-framed box,
-    Session, Tasks and Files. It switches
+  - **Header (`role: "sidetabs"`, 62px):** a segmented control in a dark `#141e42` box
+    (radius 12), Session, Tasks and Files; the active segment is lit like a selected item,
+    cyan at the left. It switches
     the `side-body` stack between this mod's session panel, Herdr's `task-board` and `files`.
   - **Cards:** Current Run, Recent Commands and Run Output (it fills the rest of the column),
-    each a separate card with a dim blue frame, 20px apart so their light never meets. There is
-    no frame round the column.
+    each separate translucent glass (`#0b1432c8`, radius 12) with a thin blue rim, brighter at
+    the top-left and along the bottom, almost no outer light and a soft light inside the top and
+    bottom edges. They are 12px apart and 4px in from the column. There is no frame round the
+    column. Rows are 16px tall at 12.3px, 7px apart; a rule under the Current Run title.
+  - **Status pill:** a 20px outline in the status colour over a faint tint of it: cyan Running,
+    amber Needs you, green Done, dim Idle.
 - **Status bar (44px):** machine, branch, agent count with a glowing dot, CPU, RAM, ↑↓ tokens,
   and "commands".
 - **Theme:** `themes/quantum.json`: terminal `#0a0b26`, foreground `#dfe4ff`, cyan cursor and
@@ -94,7 +102,7 @@ live Session panel side by side; then a status bar.
   - A 30-segment context bar shading from cyan to violet. It breathes while the agent works and
     shows the percent left and the 5-hour and 7-day limits.
 - **Recent Commands:** the last six `● Bash(...)` calls, newest first. The newest has a cyan dot
-  and a cyan frame while the agent works.
+  and a lighter row while the agent works.
 - **Run Output:** the last seven conversation lines above the agent's prompt box.
 - **Clicks and keys:**
   - A space row selects the space; its + makes a new one on that machine.
@@ -116,11 +124,11 @@ live Session panel side by side; then a status bar.
     - `body`: row of `sidebar` (block, `role: "sidebar"`), `work` and `session` (a column of
       `side-tabs` and the `side-body` stack).
     - `status`: block, `role: "status"`.
-  - `session` is a column of `side-tabs` (64px) and the `side-body` stack (`side-session`,
+  - `session` is a column of `side-tabs` (62px) and the `side-body` stack (`side-session`,
     `side-tasks`, `side-files`).
-  - `work` is a column of `tabs` (62px, `role: "tabs"`) and `card`.
-    - `card` is a row of `edge-left` (16px), `work-body` and `edge-right` (16px), over
-      `edge-bottom` (16px). The edges are `role: "edge"` blocks.
+  - `work` is a column of `tabs` (47px, `role: "tabs"`) and `card`.
+    - `card` is a row of `edge-left` (13px), `work-body` and `edge-right` (13px), over
+      `edge-bottom` (13px). The edges are `role: "edge"` blocks.
     - `work-body` contains the active tab, and the `panel` stack of `files` and `changes`.
   - Root settings: `titlebar: "none"`, `theme: "quantum"` plus `colors` overrides,
     `terminal_opacity: 0`, and the background image.
@@ -169,10 +177,10 @@ live Session panel side by side; then a status bar.
   `nebula-deep.jpg`) to see a new version at once.
 - **The card's neon is drawn in pieces.** Only the root node draws a background picture,
   so a node's `background.image` can't carry the card's frame. So:
-  - one SVG (`ui.js cardSvg`, sizes in `CARD`) holds the whole card: 10px of light outside
-    the rim, the opaque fill `#0b1131`, the crisp line on the fill's edge and a thin light
-    inside it;
-  - it is shown in 16px slices: the tab bar shows its top, three `edge` blocks
+  - one SVG (`ui.js cardSvg`, sizes in `CARD`) holds the whole card: 8px of light outside
+    the rim, the opaque fill `#0b1131`, the header band, the crisp line on the fill's edge and
+    a thin light inside it;
+  - it is shown in 13px slices: the tab bar shows its top, three `edge` blocks
     (`role: "edge"`, `side: left | right | bottom`) its sides and bottom;
   - the tab bar measures the width and the left edge the card's middle height; they share
     them (`quantum.midH`, `quantum.card`).
@@ -182,7 +190,7 @@ live Session panel side by side; then a status bar.
   - between the slices, the `work-body` node paints a square fill of exactly the same
     opaque colour, with no border and no radius, so there is no seam;
   - the rim, its corners and the fill near the edge are all in the slices. The slices are
-    6px deep inside the rim, more than the 0.3 × radius a corner arc needs, so each corner
+    5px deep inside the rim, more than the 0.3 × radius a corner arc needs, so each corner
     lies wholly in one picture. A node border plus separate glow strips left gaps and doubled
     lines at the corners.
 - **Frames sit on the edge:** each framed element's picture is made for its measured size (to

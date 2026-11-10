@@ -8,7 +8,7 @@ import * as fs from "fs/promises";
 export const A = "mods/quantum";
 export const C = {
   glass: "#0d1338ea",
-  card: "#0c1232ee",
+  card: "#0b1432c8",
   line: "#5d63d855",
   lineHi: "#8b6cffaa",
   cyan: "#4fd8ff",
@@ -40,59 +40,70 @@ export function mix(a, b, f) {
 const TONES = {
   // line colours along the diagonal: top-left, upper middle, lower middle, bottom-right; glow
   violet: ["#b8f6ff", "#8d96ff", "#7a5cff", "#e08bff", "#5a4cff"],
-  blue: ["#eef6ff", "#a8b8ff", "#7c8cff", "#c8a0ff", "#3f66ff"],
+  // selected rows: a near-white lilac end, blue, a violet end; a blue inner light
+  blue: ["#e4dcff", "#5a7ce8", "#5566d8", "#9a70e8", "#2a44b8"],
+  // selected tab and switch: cyan at the left fading to violet
+  seg: ["#8ce0ff", "#4a9ae8", "#4a62d8", "#7a60e0", "#1e3aa0"],
+  // the session cards: blue, brightest at the top-left
+  card: ["#62b0ff", "#4078d8", "#3a56b8", "#8a70f0", "#2a4ab0"],
+  // the active tab: pink-violet at the top-left, cyan on the right
+  tab: ["#e8b8ff", "#9aa8ff", "#5aa8f0", "#4fd8ff", "#2a3ab0"],
   cyan: ["#e0fbff", "#4fd8ff", "#3fa8ff", "#9b7bff", "#2fa8ff"],
   green: ["#e0fff2", "#4ef0a6", "#2fd0b0", "#4fd8ff", "#2fd0a0"],
   amber: ["#fff4d8", "#ffb547", "#ff9a4a", "#ff7ab8", "#ff9a3a"],
 };
 const made = new Map(); // file name -> "pending" | "ready"
 
-// The light around a rounded rect w×h (its edge `spread` px in from the picture's edge),
+// The light round a rounded rect w×h (its edge `spread` px in from the picture's edge),
 // drawn exactly on the element's edge: same box, same corner radius, the line centred on it.
-// A wide glow outside only, a near glow on both sides, the crisp line, and a white highlight
-// along the top that fades out before the corners (so the corners stay clean). Brightness
-// falls from the top down the sides and rises toward the bottom.
-// `gloss` (a selected item) also paints the fill: navy with a blue inner glow, so the item
-// looks lit and slightly raised; the picture then sits behind the item.
-function frameSvg(w, h, { radius, tone, spread, strength, gloss = false, fill = false }) {
+// Layers: a glow outside only (`outer` scales it), a near glow, the crisp line, a highlight
+// along the top that fades out before the corners. Brightness falls from the top down the
+// sides and rises toward the bottom. `inner` adds light just inside the top and bottom
+// edges, as the design's glass cards have.
+// `gloss` (a selected item) also paints the fill: dark navy with a blue light inside its
+// edges, so the item looks lit and slightly raised; the picture then sits behind the item.
+function frameSvg(w, h, { radius, tone, spread, strength, gloss = false, fill = false, outer = 1, inner = false }) {
   const [hot, mid, low, glint, glow] = TONES[tone] ?? TONES.violet;
   const W = Math.ceil(w) + 2 * spread, H = Math.ceil(h) + 2 * spread, s = spread, r = Math.min(radius, w / 2, h / 2);
   const k = (x) => Math.min(1, x * strength).toFixed(3);
   const U = `gradientUnits="userSpaceOnUse"`, F = `filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"`;
   const box = `x="${s}" y="${s}" width="${w}" height="${h}" rx="${r}"`;
+  const blur = (id, sd) => `<filter id="${id}" ${F}><feGaussianBlur stdDeviation="${sd}"/></filter>`;
   const defs = `<linearGradient id="g" ${U} x1="${s}" y1="${s}" x2="${s + w}" y2="${s + h}">`
     + `<stop offset="0" stop-color="${hot}"/><stop offset="0.3" stop-color="${mid}"/>`
     + `<stop offset="0.65" stop-color="${low}"/><stop offset="1" stop-color="${glint}"/></linearGradient>`
     + `<linearGradient id="v" ${U} x1="0" y1="${s}" x2="0" y2="${s + h}">`
     + `<stop offset="0" stop-color="#fff" stop-opacity="${k(1)}"/>`
-    + `<stop offset="${Math.min(0.45, 24 / h).toFixed(3)}" stop-color="#fff" stop-opacity="${k(0.72)}"/>`
-    + `<stop offset="0.5" stop-color="#fff" stop-opacity="${k(0.42)}"/>`
+    + `<stop offset="${Math.min(0.45, 24 / h).toFixed(3)}" stop-color="#fff" stop-opacity="${k(0.75)}"/>`
+    + `<stop offset="0.5" stop-color="#fff" stop-opacity="${k(0.5)}"/>`
     + `<stop offset="1" stop-color="#fff" stop-opacity="${k(0.85)}"/></linearGradient>`
+    + `<linearGradient id="iv" ${U} x1="0" y1="${s}" x2="0" y2="${s + h}"><stop offset="0" stop-color="#fff" stop-opacity="0.8"/>`
+    + `<stop offset="${Math.min(0.4, 18 / h).toFixed(3)}" stop-color="#fff" stop-opacity="0"/><stop offset="${Math.max(0.6, 1 - 18 / h).toFixed(3)}" stop-color="#fff" stop-opacity="0"/>`
+    + `<stop offset="1" stop-color="#fff" stop-opacity="0.6"/></linearGradient>`
     + `<linearGradient id="hl" ${U} x1="${s + r}" y1="0" x2="${s + w - r}" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/>`
     + `<stop offset="0.2" stop-color="#fff"/><stop offset="0.8" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>`
     + `<mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="url(#v)"/></mask>`
+    + `<mask id="mi" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="url(#iv)"/></mask>`
     + `<mask id="o" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#fff"/><rect ${box} fill="#000"/></mask>`
-    + `<filter id="wide" ${F}><feGaussianBlur stdDeviation="${(spread * 0.3).toFixed(2)}"/></filter>`
-    + `<filter id="near" ${F}><feGaussianBlur stdDeviation="0.9"/></filter>`;
+    + `<clipPath id="cl"><rect ${box}/></clipPath>`
+    + blur("wide", (spread * 0.3).toFixed(2)) + blur("near", 0.8) + blur("ig", Math.max(2, Math.min(4, h / 8)).toFixed(1));
   const line = (sw, color, extra) => `<rect ${box} fill="none" stroke="${color}" stroke-width="${sw}" ${extra}/>`;
   let body = "";
   if (gloss) {
-    body += `<linearGradient id="fb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c3aa8"/><stop offset="0.5" stop-color="#18205e"/><stop offset="1" stop-color="#2a2c92"/></linearGradient>`
-      + `<filter id="ig" ${F}><feGaussianBlur stdDeviation="${Math.max(2, Math.min(5, h / 7)).toFixed(1)}"/></filter>`
-      + `<clipPath id="cl"><rect ${box}/></clipPath>`
-      + `<rect ${box} fill="url(#fb)" fill-opacity="0.92"/>`
-      + line(Math.max(6, h / 3.5), glow, `stroke-opacity="0.9" filter="url(#ig)" clip-path="url(#cl)"`);
+    body += `<rect ${box} fill="#131a4a" fill-opacity="0.96"/>`
+      + line(Math.max(7, h / 3.2), glow, `stroke-opacity="0.85" filter="url(#ig)" clip-path="url(#cl)"`);
   }
   if (fill) body += `<rect ${box} fill="${glow}" fill-opacity="0.07"/>`;
+  if (inner) body += `<g mask="url(#mi)" clip-path="url(#cl)">` + line(14, glow, `filter="url(#ig)" opacity="0.55"`) + `</g>`;
   const top = `M${s + r} ${s + 0.6}H${s + w - r}`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${defs}</defs>`
     + body
     + `<g mask="url(#m)">`
-    + `<g mask="url(#o)">` + line(spread * 0.6, glow, `filter="url(#wide)" opacity="0.85"`) + `</g>`
-    + line(2.2, "url(#g)", `filter="url(#near)" opacity="0.55"`)
+    + (outer > 0 ? `<g mask="url(#o)">` + line(spread * 0.5, glow, `filter="url(#wide)" opacity="${(0.8 * outer).toFixed(2)}"`) + `</g>` : "")
+    + line(2, "url(#g)", `filter="url(#near)" opacity="0.45"`)
     + line(1.2, "url(#g)", "")
     + `</g>`
-    + `<path d="${top}" stroke="url(#hl)" stroke-width="1" opacity="${k(0.75)}"/>`
+    + `<path d="${top}" stroke="url(#hl)" stroke-width="1" opacity="${k(gloss ? 0.5 : 0.6)}"/>`
     + `</svg>`;
 }
 
@@ -125,32 +136,36 @@ export function ensurePic(cx, name, make) {
 // blocks (`CARD.t` px thick) its sides and bottom. The panes sit in the middle, on the
 // work-body node's square fill of the same colour, `CARD.t - CARD.m` px inside the rim:
 // enough for the corner arcs to lie wholly in the slices, so the rim is one unbroken line.
-export const CARD = { m: 10, t: 16, r: 16, fill: "#0b1131" };
+export const CARD = { m: 8, t: 13, r: 14, fill: "#0b1131", band: "#1a2254", head: 38, rule: "#454c86" };
 export function cardSvg(W, H) {
-  const { m, r, fill } = CARD;
+  const { m, t, r, fill, band, head, rule } = CARD;
   const x = m, y = m, w = W - 2 * m, h = H - 2 * m;
   const U = `gradientUnits="userSpaceOnUse"`, F = `filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"`;
   const box = `x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}"`;
   const fade = (id, c) => `<linearGradient id="${id}" ${U} x1="${x + r}" y1="0" x2="${x + w - r}" y2="0"><stop offset="0" stop-color="${c}" stop-opacity="0"/>`
     + `<stop offset="0.12" stop-color="${c}"/><stop offset="0.88" stop-color="${c}"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient>`;
-  const defs = `<linearGradient id="g" ${U} x1="${x}" y1="0" x2="${x + w}" y2="0">`
-    + `<stop offset="0" stop-color="#e08bff"/><stop offset="0.3" stop-color="#9b7bff"/>`
-    + `<stop offset="0.7" stop-color="#5c8cff"/><stop offset="1" stop-color="#3fd8ff"/></linearGradient>`
-    + fade("bt", "#f0a8ff") + fade("tp", "#9ab8ff") + fade("hl", "#ffffff")
+  // blue all round, cyan toward the right; brightest along the top
+  const defs = `<linearGradient id="g" ${U} x1="${x}" y1="${y}" x2="${x + w}" y2="${y + h}">`
+    + `<stop offset="0" stop-color="#7a9cff"/><stop offset="0.55" stop-color="#6478ea"/><stop offset="1" stop-color="#52c0f2"/></linearGradient>`
+    + `<linearGradient id="v" ${U} x1="0" y1="${y}" x2="0" y2="${y + h}"><stop offset="0" stop-color="#fff"/>`
+    + `<stop offset="${Math.min(0.3, 40 / h).toFixed(3)}" stop-color="#fff" stop-opacity="0.7"/><stop offset="1" stop-color="#fff" stop-opacity="0.8"/></linearGradient>`
+    + fade("tp", "#8ab4ff") + fade("hl", "#dfe8ff")
+    + `<mask id="mv" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="url(#v)"/></mask>`
     + `<mask id="o" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#fff"/><rect ${box} fill="#000"/></mask>`
     + `<clipPath id="c"><rect ${box}/></clipPath>`
-    + `<filter id="w" ${F}><feGaussianBlur stdDeviation="3.2"/></filter><filter id="n" ${F}><feGaussianBlur stdDeviation="0.9"/></filter>`;
+    + `<filter id="w" ${F}><feGaussianBlur stdDeviation="2.4"/></filter><filter id="n" ${F}><feGaussianBlur stdDeviation="0.8"/></filter>`;
   const ring = (sw, stroke, extra) => `<rect ${box} fill="none" stroke="${stroke}" stroke-width="${sw}" ${extra}/>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${defs}</defs>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.ceil(W)}" height="${Math.ceil(H)}" viewBox="0 0 ${Math.ceil(W)} ${Math.ceil(H)}"><defs>${defs}</defs>`
     + `<rect ${box} fill="${fill}"/>`
-    + `<g mask="url(#o)">` + ring(7, "url(#g)", `filter="url(#w)"`)
-    + `<path d="M${x + r} ${y + h}H${x + w - r}" stroke="url(#bt)" stroke-width="8" filter="url(#w)"/>`
-    + `<path d="M${x + r} ${y}H${x + w - r}" stroke="url(#tp)" stroke-width="4" opacity="0.7" filter="url(#w)"/></g>`
-    + `<g clip-path="url(#c)">` + ring(3, "url(#g)", `filter="url(#n)" opacity="0.6"`)
-    + `<path d="M${x + r} ${y + h}H${x + w - r}" stroke="url(#bt)" stroke-width="3" opacity="0.6" filter="url(#n)"/></g>`
-    + ring(1.3, "url(#g)", "")
-    + `<path d="M${x + r} ${y + 0.6}H${x + w - r}" stroke="url(#hl)" stroke-width="1" opacity="0.55"/>`
-    + `<path d="M${x + r} ${y + h - 0.6}H${x + w - r}" stroke="url(#hl)" stroke-width="1" opacity="0.7"/>`
+    // the pane header's band runs out to the rim (the header itself starts t - m px inside it)
+    + `<rect x="${x}" y="${y}" width="${w}" height="${t + head - y}" fill="${band}" clip-path="url(#c)"/>`
+    + `<rect x="${x}" y="${t + head - 1}" width="${w}" height="1" fill="${rule}" clip-path="url(#c)"/>`
+    + `<g mask="url(#mv)">`
+    + `<g mask="url(#o)">` + ring(5, "#3a6ae8", `filter="url(#w)" opacity="0.85"`)
+    + `<path d="M${x + r} ${y}H${x + w - r}" stroke="url(#tp)" stroke-width="4" opacity="0.6" filter="url(#w)"/></g>`
+    + `<g clip-path="url(#c)">` + ring(2.4, "url(#g)", `filter="url(#n)" opacity="0.5"`) + `</g>`
+    + ring(1.5, "url(#g)", "") + `</g>`
+    + `<path d="M${x + r} ${y + 0.6}H${x + w - r}" stroke="url(#hl)" stroke-width="1" opacity="0.6"/>`
     + `</svg>`;
 }
 
@@ -183,16 +198,16 @@ function framePic(cx, size, opts) {
   // The element's own size to a quarter pixel, so the drawn edge lands on its edge.
   const w = Math.round(size.width * 4) / 4, h = Math.round(size.height * 4) / 4;
   if (w < 4 || h < 4) return null;
-  const { radius, tone, spread, strength, gloss = false, fill = false } = opts;
-  const name = `v7-${tone}-${radius}-${spread}-${Math.round(strength * 100)}-${gloss ? "g" : ""}${fill ? "f" : ""}-${w}x${h}.svg`;
-  const rel = ensurePic(cx, name, () => frameSvg(w, h, { radius, tone, spread, strength, gloss, fill }));
+  const { radius, tone, spread, strength, gloss = false, fill = false, outer = 1, inner = false } = opts;
+  const name = `v8-${tone}-${radius}-${spread}-${Math.round(strength * 100)}-${Math.round(outer * 100)}${gloss ? "g" : ""}${fill ? "f" : ""}${inner ? "i" : ""}-${w}x${h}.svg`;
+  const rel = ensurePic(cx, name, () => frameSvg(w, h, { radius, tone, spread, strength, gloss, fill, outer, inner }));
   if (rel) return image(rel).absolute().left(-spread).top(-spread).w(Math.ceil(w) + 2 * spread).h(Math.ceil(h) + 2 * spread);
   return null;
 }
 
 // `el` (rounded `radius`) with a neon frame when `on`. `view.sizes` keeps measured sizes;
 // `key` must be unique in the mod copy.
-export function neon(view, cx, key, el, { on = true, radius = 12, tone = "violet", spread = 10, strength = 1, pulse = false, full = true, gloss = false, fill = false, tall = false } = {}) {
+export function neon(view, cx, key, el, { on = true, radius = 12, tone = "violet", spread = 10, strength = 1, full = true, gloss = false, fill = false, tall = false, outer = 1, inner = false } = {}) {
   const box = div().id(`nz-${key}`).relative().when(full, (d) => d.w_full()).when(tall, (d) => d.h_full())
     .on_size_change((size, cx) => {
       const old = view.sizes[key];
@@ -201,7 +216,7 @@ export function neon(view, cx, key, el, { on = true, radius = 12, tone = "violet
       }
     });
   // Selected items light up blue, as the design's do.
-  const pic = on ? framePic(cx, view.sizes[key], { radius, tone: gloss && tone === "violet" ? "blue" : tone, spread, strength, gloss, fill }) : null;
+  const pic = on ? framePic(cx, view.sizes[key], { radius, tone: gloss && tone === "violet" ? "blue" : tone, spread, strength, gloss, fill, outer, inner }) : null;
   // A selected item's picture carries its fill, so it goes behind; a plain frame goes over.
   if (!pic) return box.child(el);
   return gloss ? box.child(pic).child(el) : box.child(el).child(pic);
