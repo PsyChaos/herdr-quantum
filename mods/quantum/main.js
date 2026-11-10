@@ -95,17 +95,24 @@ export default class Quantum extends View {
       ?? null;
   }
 
+  // Reads only the visible screen: `hc read` with history takes seconds on a long
+  // agent session and blocks the core, so every terminal lags and loses its scroll.
   refresh(cx) {
+    if (this.busy) return;
+    if (this.role === "session" && (find(layout(), "side-body")?.active ?? "side-session") !== "side-session") return;
+    this.busy = true;
     cx.spawn(async (cx) => {
-      const a = this.target();
-      if (a) {
-        try {
-          const r = await hc(["read", a.address, "--lines", this.role === "session" ? "120" : "0"]);
-          if (r.code === 0) this.screen = { address: a.address, ...parseScreen(r.stdout) };
-        } catch (_) { /* unreachable machine: keep the last screen */ }
-      } else this.screen = {};
-      if (this.role === "status") await this.readSystem();
-      cx.notify();
+      try {
+        const a = this.target();
+        if (a) {
+          try {
+            const r = await hc(["read", a.address, "--lines", "0"]);
+            if (r.code === 0) this.screen = { address: a.address, ...parseScreen(r.stdout) };
+          } catch (_) { /* unreachable machine: keep the last screen */ }
+        } else this.screen = {};
+        if (this.role === "status") await this.readSystem();
+        cx.notify();
+      } finally { this.busy = false; }
     });
   }
 
