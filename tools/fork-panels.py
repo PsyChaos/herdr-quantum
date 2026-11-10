@@ -28,9 +28,13 @@ for name in ("files", "changes"):
     code = open(os.path.join(src, "main.js")).read()
     code = code.replace(f"mods/{name}/", f"mods/{prefix}-{name}/")
     code = re.sub(r"\.rounded\(\d+(?:\.\d+)?\)", "", code)                       # square corners
+    # text in the terminal font (diffs, previews) grows by at most 2px; the rest by `grow`
+    mono = re.compile(r'(font_family\(settings\(\)\.font_family[^)]*\)\.text_size\()(\d+(?:\.\d+)?)\)')
+    code = mono.sub(lambda m: f"{m.group(1)}{num(float(m.group(2)) + min(grow, 2))}@@)", code)
     code = re.sub(r"\.text_size\((\d+(?:\.\d+)?)\)", lambda m: f".text_size({num(float(m.group(1)) + grow)})", code)
+    code = code.replace("@@)", ")")
     code = re.sub(r"font_size: (\d+)", lambda m: f"font_size: {num(float(m.group(1)) + min(grow, 2))}", code)
-    code = re.sub(r"\.h\(28\)", f".h({num(28 + max(0, grow - 1) * 2)})", code)     # rows grow with the text
+    code = re.sub(r"\.h\(28\)", f".h({num(28 + min(6, max(0, grow - 1)))})", code)  # rows grow a little with the text
     if border != 1:
         code = code.replace(".border_1().border_color(t.border)", f".border({border}).border_color(t.border)")
     head = (f"// Modified from Herdr's shipped `{name}` mod (Apache License 2.0, see LICENSE here):\n"
