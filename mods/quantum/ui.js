@@ -46,6 +46,8 @@ const TONES = {
   seg: ["#8ce0ff", "#4a9ae8", "#4a62d8", "#7a60e0", "#1e3aa0"],
   // the session cards: blue, brightest at the top-left
   card: ["#62b0ff", "#4078d8", "#3a56b8", "#8a70f0", "#2a4ab0"],
+  // the sidebar panel and the status bar: a white-blue top, dim blue sides, violet at the bottom
+  panel: ["#dfe2ff", "#5a64d8", "#3c4498", "#7c5cd0", "#3434c8"],
   // the active tab: pink-violet at the top-left, cyan on the right
   tab: ["#e8b8ff", "#9aa8ff", "#5aa8f0", "#4fd8ff", "#2a3ab0"],
   cyan: ["#e0fbff", "#4fd8ff", "#3fa8ff", "#9b7bff", "#2fa8ff"],
@@ -129,40 +131,54 @@ export function ensurePic(cx, name, make) {
   return null;
 }
 
-// The terminal card, as one picture W×H of the card plus its light: `CARD.m` px of light
-// outside the rim on every side, then the rounded card (radius `CARD.r`, opaque fill
-// `CARD.fill`, the crisp line on its edge, a thin light inside). The picture is shown in
-// slices by the blocks round the card: the tab bar shows its top `CARD.t` px, the "edge"
-// blocks (`CARD.t` px thick) its sides and bottom. The panes sit in the middle, on the
-// work-body node's square fill of the same colour, `CARD.t - CARD.m` px inside the rim:
-// enough for the corner arcs to lie wholly in the slices, so the rim is one unbroken line.
-export const CARD = { m: 8, t: 13, r: 14, fill: "#0b1131", band: "#1a2254", head: 38, rule: "#454c86" };
+// The work area, as one picture W×H: a faint rounded shell (the tabs stand on its top edge)
+// holding the terminal card with its brighter rim. `CARD.m` px of margin outside the shell;
+// the card's rim sits `sIn` px inside the shell at the sides and bottom, `sTop` px below its
+// top; the panes start `inner` px inside the rim. The picture is shown in slices by the
+// blocks round the panes: the tab bar shows its top `CARD.tt` px, the "edge" blocks
+// (`CARD.t` px thick) its sides and bottom. Between them the work-body node paints a square
+// fill of the card's exact colour. Every slice reaches `inner` px inside the rim, more than
+// a corner arc needs, so each corner lies wholly in one picture and both lines are unbroken.
+export const CARD = (() => {
+  const m = 3, sIn = 6, sTop = 8, inner = 5;
+  return { m, sIn, sTop, inner, t: m + sIn + inner, tt: m + sTop + inner, R: 18, r: 14,
+    shell: "#0a153c", fill: "#0b1131", band: "#1a2254", head: 38, rule: "#454c86" };
+})();
 export function cardSvg(W, H) {
-  const { m, t, r, fill, band, head, rule } = CARD;
-  const x = m, y = m, w = W - 2 * m, h = H - 2 * m;
-  const U = `gradientUnits="userSpaceOnUse"`, F = `filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"`;
+  const { m, sIn, sTop, tt, R, r, shell, fill, band, head, rule } = CARD;
+  const PW = Math.ceil(W), PH = Math.ceil(H);
+  const sx = m, sy = m, sw = W - 2 * m, sh = H - 2 * m;
+  const x = m + sIn, y = m + sTop, w = W - 2 * (m + sIn), h = H - 2 * m - sTop - sIn;
+  const U = `gradientUnits="userSpaceOnUse"`, F = `filterUnits="userSpaceOnUse" x="0" y="0" width="${PW}" height="${PH}"`;
+  // square at the top-left, where the first tab (the grid button) grows out of it
+  const sp = `M${sx} ${sy}H${sx + sw - R}A${R} ${R} 0 0 1 ${sx + sw} ${sy + R}V${sy + sh - R}A${R} ${R} 0 0 1 ${sx + sw - R} ${sy + sh}`
+    + `H${sx + R}A${R} ${R} 0 0 1 ${sx} ${sy + sh - R}Z`;
   const box = `x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}"`;
   const fade = (id, c) => `<linearGradient id="${id}" ${U} x1="${x + r}" y1="0" x2="${x + w - r}" y2="0"><stop offset="0" stop-color="${c}" stop-opacity="0"/>`
     + `<stop offset="0.12" stop-color="${c}"/><stop offset="0.88" stop-color="${c}"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient>`;
-  // blue all round, cyan toward the right; brightest along the top
   const defs = `<linearGradient id="g" ${U} x1="${x}" y1="${y}" x2="${x + w}" y2="${y + h}">`
     + `<stop offset="0" stop-color="#7a9cff"/><stop offset="0.55" stop-color="#6478ea"/><stop offset="1" stop-color="#52c0f2"/></linearGradient>`
     + `<linearGradient id="v" ${U} x1="0" y1="${y}" x2="0" y2="${y + h}"><stop offset="0" stop-color="#fff"/>`
     + `<stop offset="${Math.min(0.3, 40 / h).toFixed(3)}" stop-color="#fff" stop-opacity="0.7"/><stop offset="1" stop-color="#fff" stop-opacity="0.8"/></linearGradient>`
+    // the shell's line: faint blue, a little brighter along the top
+    + `<linearGradient id="sl" ${U} x1="0" y1="${sy}" x2="0" y2="${sy + sh}"><stop offset="0" stop-color="#2e4c98"/>`
+    + `<stop offset="${Math.min(0.2, 30 / sh).toFixed(3)}" stop-color="#1c2a66"/><stop offset="1" stop-color="#1e2c6a"/></linearGradient>`
     + fade("tp", "#8ab4ff") + fade("hl", "#dfe8ff")
-    + `<mask id="mv" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="url(#v)"/></mask>`
-    + `<mask id="o" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#fff"/><rect ${box} fill="#000"/></mask>`
+    + `<mask id="mv" maskUnits="userSpaceOnUse" x="0" y="0" width="${PW}" height="${PH}"><rect width="${PW}" height="${PH}" fill="url(#v)"/></mask>`
+    + `<mask id="o" maskUnits="userSpaceOnUse" x="0" y="0" width="${PW}" height="${PH}"><rect width="${PW}" height="${PH}" fill="#fff"/><rect ${box} fill="#000"/></mask>`
     + `<clipPath id="c"><rect ${box}/></clipPath>`
-    + `<filter id="w" ${F}><feGaussianBlur stdDeviation="2.4"/></filter><filter id="n" ${F}><feGaussianBlur stdDeviation="0.8"/></filter>`;
+    + `<filter id="w" ${F}><feGaussianBlur stdDeviation="2"/></filter><filter id="n" ${F}><feGaussianBlur stdDeviation="0.8"/></filter>`;
   const ring = (sw, stroke, extra) => `<rect ${box} fill="none" stroke="${stroke}" stroke-width="${sw}" ${extra}/>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.ceil(W)}" height="${Math.ceil(H)}" viewBox="0 0 ${Math.ceil(W)} ${Math.ceil(H)}"><defs>${defs}</defs>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${PW}" height="${PH}" viewBox="0 0 ${PW} ${PH}"><defs>${defs}</defs>`
+    + `<path d="${sp}" fill="${shell}" fill-opacity="0.92"/>`
+    + `<path d="${sp}" fill="none" stroke="url(#sl)" stroke-width="1.2"/>`
     + `<rect ${box} fill="${fill}"/>`
-    // the pane header's band runs out to the rim (the header itself starts t - m px inside it)
-    + `<rect x="${x}" y="${y}" width="${w}" height="${t + head - y}" fill="${band}" clip-path="url(#c)"/>`
-    + `<rect x="${x}" y="${t + head - 1}" width="${w}" height="1" fill="${rule}" clip-path="url(#c)"/>`
+    // the pane header's band runs out to the rim (the header itself starts `inner` px inside it)
+    + `<rect x="${x}" y="${y}" width="${w}" height="${tt + head - y}" fill="${band}" clip-path="url(#c)"/>`
+    + `<rect x="${x}" y="${tt + head - 1}" width="${w}" height="1" fill="${rule}" clip-path="url(#c)"/>`
     + `<g mask="url(#mv)">`
-    + `<g mask="url(#o)">` + ring(5, "#3a6ae8", `filter="url(#w)" opacity="0.85"`)
-    + `<path d="M${x + r} ${y}H${x + w - r}" stroke="url(#tp)" stroke-width="4" opacity="0.6" filter="url(#w)"/></g>`
+    + `<g mask="url(#o)">` + ring(4, "#3a6ae8", `filter="url(#w)" opacity="0.75"`)
+    + `<path d="M${x + r} ${y}H${x + w - r}" stroke="url(#tp)" stroke-width="3" opacity="0.6" filter="url(#w)"/></g>`
     + `<g clip-path="url(#c)">` + ring(2.4, "url(#g)", `filter="url(#n)" opacity="0.5"`) + `</g>`
     + ring(1.5, "url(#g)", "") + `</g>`
     + `<path d="M${x + r} ${y + 0.6}H${x + w - r}" stroke="url(#hl)" stroke-width="1" opacity="0.6"/>`
@@ -223,7 +239,7 @@ export function neon(view, cx, key, el, { on = true, radius = 12, tone = "violet
 }
 
 // A glass panel filling its block, framed in neon. Leaves `margin` px around it for the light.
-export function panel(view, cx, key, content, { radius = 18, tone = "violet", strength = 1, margin = 10, pad = 0, id } = {}) {
+export function panel(view, cx, key, content, { radius = 18, tone = "panel", strength = 1, margin = 10, pad = 0, id } = {}) {
   const box = div().size_full().rounded(radius).bg(C.glass).overflow_hidden().p(pad).child(content);
   const inner = div().id(`pz-${key}`).relative().size_full()
     .on_size_change((size, cx) => {

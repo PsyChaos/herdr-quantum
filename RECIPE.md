@@ -29,7 +29,9 @@ live Session panel side by side; then a status bar.
   - **Brightness:** brightest along the top, dimmest halfway down the sides, brighter again
     at the bottom.
   - **Light:** a wide blurred copy in `#5a4cff` and a near one spill the light around the card.
-  - **Glass:** panels are nearly opaque navy `#0d1338ea`; the session cards `#0c1232ee`.
+  - **Glass:** panels are nearly opaque navy `#0d1338ea`; the session cards `#0b1432c8`.
+  - **Sidebar and status bar rims:** a white-blue top `#dfe2ff`, dim blue `#3c4498` sides,
+    violet `#7c5cd0` toward the bottom, with a `#3434c8` glow.
   - **Selected items** (the active space, focused and working agents, the active tab, the
     Session switch): a dark navy fill `#131a4a` with a blue light just inside its edges and a
     thin bright outline (near-white lilac to blue to violet; cyan-led for the tab and the
@@ -56,14 +58,19 @@ live Session panel side by side; then a status bar.
   - **Sub-agents:** nested under their parent with "└". Clicking the parent's icon folds them.
   - **Footer:** Settings and Add machine.
 - **Work area:**
-  - **Tab bar (47px):** a grid button (picker) and the tabs as 30px boxes (radius 8) standing
-    on the card's rim, with no gap; under them the card's top slice. Inactive tabs are dark
-    `#161a42` with a thin `#2e3270` border; the active tab is dark too, with a thin outline
-    running pink-violet at the top-left to cyan on the right and a faint glow. No + button
-    (the pane header's + and the new-tab keys make tabs).
-  - **Card:** one rounded rim (radius 14) round all the panes, unbroken at the corners: a
-    1.5px blue line (cyan toward the right), brightest along the top, with a gentle blue glow.
-    The panes sit 5px inside it.
+  - **Tab bar (53px):** a 40px tab row over the top of the work area's shell. The grid button
+    (picker) is the shell's own folder tab: its left side is the shell's left side. The tabs are
+    32px boxes with rounded tops standing on the shell's top edge: inactive ones dark `#171b45`
+    with a thin `#262b62` border, the active one dark too, radius 9, with a thin outline
+    running pink-violet at the top-left to cyan on the right and a faint glow. No + button (the
+    pane header's + and the new-tab keys make tabs).
+  - **Shell:** a faint rounded frame (radius 18, square at the top-left where the grid tab
+    grows out of it) round the tab row's base and the terminal card: fill `#0a153c`, a 1.2px
+    dim blue line, a little brighter along the top.
+  - **Card:** inside the shell, 8px below its top and 6px in from its sides and bottom: one
+    rounded rim (radius 14) round all the panes, unbroken at the corners, a 1.5px blue line
+    (cyan toward the right), brightest along the top, with a gentle blue glow. The panes sit
+    5px inside it.
   - **Panes:** transparent, with no border or radius of their own.
   - **Pane header (38px, `role: "pane"`):** a `#1a2254` band with a `#454c86` line under it.
     The card picture paints the same band and line out to the rim, so the header runs full
@@ -126,9 +133,9 @@ live Session panel side by side; then a status bar.
     - `status`: block, `role: "status"`.
   - `session` is a column of `side-tabs` (62px) and the `side-body` stack (`side-session`,
     `side-tasks`, `side-files`).
-  - `work` is a column of `tabs` (47px, `role: "tabs"`) and `card`.
-    - `card` is a row of `edge-left` (13px), `work-body` and `edge-right` (13px), over
-      `edge-bottom` (13px). The edges are `role: "edge"` blocks.
+  - `work` is a column of `tabs` (53px, `role: "tabs"`) and `card`.
+    - `card` is a row of `edge-left` (14px), `work-body` and `edge-right` (14px), over
+      `edge-bottom` (14px). The edges are `role: "edge"` blocks.
     - `work-body` contains the active tab, and the `panel` stack of `files` and `changes`.
   - Root settings: `titlebar: "none"`, `theme: "quantum"` plus `colors` overrides,
     `terminal_opacity: 0`, and the background image.
@@ -177,10 +184,9 @@ live Session panel side by side; then a status bar.
   `nebula-deep.jpg`) to see a new version at once.
 - **The card's neon is drawn in pieces.** Only the root node draws a background picture,
   so a node's `background.image` can't carry the card's frame. So:
-  - one SVG (`ui.js cardSvg`, sizes in `CARD`) holds the whole card: 8px of light outside
-    the rim, the opaque fill `#0b1131`, the header band, the crisp line on the fill's edge and
-    a thin light inside it;
-  - it is shown in 13px slices: the tab bar shows its top, three `edge` blocks
+  - one SVG (`ui.js cardSvg`, sizes in `CARD`) holds the whole work area: the shell, the
+    card's opaque fill `#0b1131`, the header band, the card's crisp line and its light;
+  - it is shown in slices: the tab bar shows its top 16px, three 14px `edge` blocks
     (`role: "edge"`, `side: left | right | bottom`) its sides and bottom;
   - the tab bar measures the width and the left edge the card's middle height; they share
     them (`quantum.midH`, `quantum.card`).

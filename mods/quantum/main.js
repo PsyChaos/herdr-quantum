@@ -19,7 +19,7 @@ import {
 import { A, C, SPIN, CARD, neon, panel, barPic, ensurePic, cardSvg, halo, icon, programIcon, bar, letterTile, statusMark, ago } from "./ui.js";
 
 const stop = (_e, cx) => cx.stop_propagation();
-const TAB_ROW = 34; // the tab bar's tab row; the card's top slice is under it, and the tabs stand on its rim
+const TAB_ROW = 40; // the tab bar's tab row: the tabs stand on the shell's top edge at its bottom
 
 function find(node, id) {
   if (node?.id === id) return node;
@@ -301,8 +301,9 @@ export default class Quantum extends View {
     const shown = space?.tabs ?? [];
     const all = panes();
     const cardTop = this.syncCard(cx);
-    const shape = (el, on) => el.h(30).px(11).gap(8).items_center().flex_none().rounded(8).text_size(12.5)
-      .when(!on, (e) => e.bg("#161a42")).border(1).border_color(on ? "#00000000" : "#2e3270")
+    const shape = (el, on) => el.h(32).px(12).gap(8).items_center().flex_none().text_size(12.5)
+      .when(on, (e) => e.rounded(9).border(1).border_color("#00000000"))
+      .when(!on, (e) => e.rounded_t(10).bg("#171b45").border_t(1).border_l(1).border_r(1).border_color("#262b62"))
       .text_color(on ? "#ffffff" : "#c8cdf5");
     const pill = (c) => {
       const program = all.find((p) => p.tab === c.id && p.program?.agent)?.program ?? all.find((p) => p.tab === c.id)?.program;
@@ -321,11 +322,12 @@ export default class Quantum extends View {
         .when(c.active, (el) => el.child(div().id(`q-tabx-${c.id}`).text_color(C.muted).hover((x) => x.text_color("#ffffff"))
           .on_mouse_down("left", stop).on_click((_e, cx) => { cx.stop_propagation(); run("tab.close", { id: c.id }); })
           .child(svg("mods/pane/close.svg").size(12))));
-      return div().flex_none().child(neon(this, cx, `tab-${c.id}`, el, { on: c.active, radius: 8, spread: 6, tone: "tab", full: false, gloss: true, outer: 0.6 }));
+      return div().flex_none().child(neon(this, cx, `tab-${c.id}`, el, { on: c.active, radius: 9, spread: 6, tone: "tab", full: false, gloss: true, outer: 0.6 }));
     };
-    const row = h_flex().id("q-tabs").absolute().left(0).top(0).w_full().h(TAB_ROW + CARD.m).min_w(0).px(CARD.m + 10).gap(5).items_end()
+    const row = h_flex().id("q-tabs").absolute().left(0).top(0).w_full().h(TAB_ROW).min_w(0).pl(CARD.m - 0.5).pr(CARD.m + 3).gap(6).items_end()
       .on_scroll_wheel((e) => { if (Math.abs(e.delta.y) >= 1) run(e.delta.y > 0 ? "tab.prev" : "tab.next"); })
-      .child(shape(h_flex().id("q-grid").cursor_pointer().hover((x) => x.text_color(C.text)), false).px(10)
+      // the grid button is the shell's own folder tab: its left side is the shell's left side
+      .child(shape(h_flex().id("q-grid").cursor_pointer().hover((x) => x.text_color(C.text)), false).px(12).bg(CARD.shell).border_color("#2a4590")
         .on_mouse_down("left", stop).on_click(() => run("mod.open", { name: "picker" })).child(icon("grid", 15, C.muted)))
       .child(h_flex().id("q-tab-scroll").min_w(0).h_full().items_end().gap(6).overflow_x_scrollbar().children(shown.map(pill)))
       .child(div().flex_1());
@@ -334,7 +336,7 @@ export default class Quantum extends View {
         const w = Math.round(size.width * 4) / 4;
         if (w !== this.tabsW) { this.tabsW = w; cx.notify(); }
       })
-      .child(div().absolute().left(0).top(TAB_ROW).w_full().h(CARD.t).overflow_hidden().when(Boolean(cardTop), (el) => el.child(cardTop)))
+      .child(div().absolute().left(0).top(TAB_ROW - CARD.m).w_full().h(CARD.tt).overflow_hidden().when(Boolean(cardTop), (el) => el.child(cardTop)))
       .child(row);
   }
 
@@ -346,8 +348,8 @@ export default class Quantum extends View {
   syncCard(cx) {
     const W = this.tabsW, mid = shared("quantum.midH");
     if (!W || !mid) return null;
-    const H = mid + 2 * CARD.t;
-    const rel = ensurePic(cx, `v15-card-${W}x${H}.svg`, () => cardSvg(W, H));
+    const H = CARD.tt + mid + CARD.t;
+    const rel = ensurePic(cx, `v17-card-${W}x${H}.svg`, () => cardSvg(W, H));
     if (!rel) return null;
     const cur = shared("quantum.card");
     if (!cur || cur.rel !== rel) cx.spawn(async () => setShared("quantum.card", { W, H, rel }));
@@ -365,8 +367,8 @@ export default class Quantum extends View {
       }));
     if (!c) return box;
     const pic = image(c.rel).absolute().w(Math.ceil(c.W)).h(Math.ceil(c.H));
-    if (side === "left") return box.child(pic.left(0).top(-CARD.t));
-    if (side === "right") return box.child(pic.left(-(c.W - CARD.t)).top(-CARD.t));
+    if (side === "left") return box.child(pic.left(0).top(-CARD.tt));
+    if (side === "right") return box.child(pic.left(-(c.W - CARD.t)).top(-CARD.tt));
     return box.child(pic.left(0).top(-(c.H - CARD.t)));
   }
 
@@ -517,6 +519,6 @@ export default class Quantum extends View {
       .child(h_flex().id("q-palette").gap(8).items_center().cursor_pointer().text_color(C.muted)
         .hover((x) => x.text_color("#ffffff")).on_click(() => run("app.palette"))
         .child(icon("terminal", 15, C.lilac)).child("commands"));
-    return div().id("q-status").size_full().px(14).py(5).child(neon(this, cx, "statusbar", div().size_full().rounded(17).bg("#05071e66").child(content), { radius: 17, spread: 8, strength: 1, fill: true, tall: true }));
+    return div().id("q-status").size_full().px(14).py(5).child(neon(this, cx, "statusbar", div().size_full().rounded(17).bg("#05071e66").child(content), { radius: 17, spread: 8, tone: "panel", strength: 1, fill: true, tall: true }));
   }
 }

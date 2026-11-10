@@ -84,7 +84,7 @@
               "id": "tabs",
               "type": "block",
               "size": {
-                "px": 47
+                "px": 53
               },
               "window_drag": true,
               "content": {
@@ -109,7 +109,7 @@
                       "id": "edge-left",
                       "type": "block",
                       "size": {
-                        "px": 13
+                        "px": 14
                       },
                       "resizable": false,
                       "content": {
@@ -198,7 +198,7 @@
                       "id": "edge-right",
                       "type": "block",
                       "size": {
-                        "px": 13
+                        "px": 14
                       },
                       "resizable": false,
                       "content": {
@@ -215,7 +215,7 @@
                   "id": "edge-bottom",
                   "type": "block",
                   "size": {
-                    "px": 13
+                    "px": 14
                   },
                   "resizable": false,
                   "content": {
