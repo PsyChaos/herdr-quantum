@@ -57,21 +57,24 @@ live Session panel side by side; then a status bar.
   - **Sub-agents:** nested under their parent with "└". Clicking the parent's icon folds them.
   - **Footer:** Settings and Add machine.
 - **Work area:**
-  - **Tab bar (40px):** a dark rounded strip (`#070a26d0`) holding a grid button (picker), the
-    tabs as 32px pills, then +. The active tab is lit like a selected item.
-  - **Panes:** cards with radius 12 and a `#8b6cff77` border; the focused pane's border is lilac
-    `#c4b2ffee`.
-  - **Pane header (36px, `role: "pane"`):** the program icon and name, the folder in dim text,
+  - **Tab bar (62px):** a 46px row with a grid button (picker), the tabs as 32px pills, then +;
+    under it the card's top slice. The active tab is lit like a selected item and sits 6px
+    above the card's light.
+  - **Card:** one rounded rim (radius 16) round all the panes, unbroken at the corners. The
+    panes sit 6px inside it.
+  - **Panes:** transparent, with no border of their own.
+  - **Pane header (38px, `role: "pane"`):** a `#121842` band with top corners of radius 10
+    (concentric with the card's) and a `#2e3488` line under it:** the program icon and name, the folder in dim text,
     the status, then `+` (split right), Files, Changes and `⋮` (the pane menu). Files and
     Changes appear only here.
   - **Terminals:** `terminal_opacity` 0, over the card's own fill.
 - **Right column (330px):**
-  - **Frame:** the `session-frame` column, `#080c28d8`, radius 18, a `#7c7ef0bb` line, 10px in
-    from the column's edges.
-  - **Header (`role: "sidetabs"`):** a segmented control, Session, Tasks and Files. It switches
+  - **Header (`role: "sidetabs"`, 64px):** a segmented control in a dim blue-framed box,
+    Session, Tasks and Files. It switches
     the `side-body` stack between this mod's session panel, Herdr's `task-board` and `files`.
   - **Cards:** Current Run, Recent Commands and Run Output (it fills the rest of the column),
-    each an edge-lit card.
+    each a separate card with a dim blue frame, 20px apart so their light never meets. There is
+    no frame round the column.
 - **Status bar (44px):** machine, branch, agent count with a glowing dot, CPU, RAM, ↑↓ tokens,
   and "commands".
 - **Theme:** `themes/quantum.json`: terminal `#0a0b26`, foreground `#dfe4ff`, cyan cursor and
@@ -113,11 +116,11 @@ live Session panel side by side; then a status bar.
     - `body`: row of `sidebar` (block, `role: "sidebar"`), `work` and `session` (a column of
       `side-tabs` and the `side-body` stack).
     - `status`: block, `role: "status"`.
-  - `session` is padded 10px and holds `session-frame`, a column of `side-tabs` (56px) and the
-    `side-body` stack (`side-session`, `side-tasks`, `side-files`).
-  - `work` is a column of `tabs` (40px, `role: "tabs"`) and `card`.
-    - `card` is a row of `edge-left` (12px), `work-body` and `edge-right` (12px), over
-      `edge-bottom` (12px). The edges are `role: "edge"` blocks.
+  - `session` is a column of `side-tabs` (64px) and the `side-body` stack (`side-session`,
+    `side-tasks`, `side-files`).
+  - `work` is a column of `tabs` (62px, `role: "tabs"`) and `card`.
+    - `card` is a row of `edge-left` (16px), `work-body` and `edge-right` (16px), over
+      `edge-bottom` (16px). The edges are `role: "edge"` blocks.
     - `work-body` contains the active tab, and the `panel` stack of `files` and `changes`.
   - Root settings: `titlebar: "none"`, `theme: "quantum"` plus `colors` overrides,
     `terminal_opacity: 0`, and the background image.
@@ -166,21 +169,26 @@ live Session panel side by side; then a status bar.
   `nebula-deep.jpg`) to see a new version at once.
 - **The card's neon is drawn in pieces.** Only the root node draws a background picture,
   so a node's `background.image` can't carry the card's frame. So:
-  - one SVG of the whole card is drawn piecewise;
-  - the tab bar draws its top part (absolute, behind the tabs);
-  - three 12px `edge` blocks (`role: "edge"`, `side: left | right | bottom`) draw their
-    slices, offset by the card size;
-  - the tab bar measures the width, the sidebar the body height, and both share them
-    (`quantum.bodyH`, `quantum.card`).
+  - one SVG (`ui.js cardSvg`, sizes in `CARD`) holds the whole card: 10px of light outside
+    the rim, the opaque fill `#0b1131`, the crisp line on the fill's edge and a thin light
+    inside it;
+  - it is shown in 16px slices: the tab bar shows its top, three `edge` blocks
+    (`role: "edge"`, `side: left | right | bottom`) its sides and bottom;
+  - the tab bar measures the width and the left edge the card's middle height; they share
+    them (`quantum.midH`, `quantum.card`).
 - **Square corners:** a terminal paints its background over its whole pane, square, whatever
   the pane radius. So:
   - `terminal_opacity` is 0 and pane backgrounds are transparent;
-  - the card's fill comes from the `work-body` node: `#0a1030f2`, radius 18, which layout
-    nodes do round;
-  - the crisp line is that node's own `border` (`#e2d6ff`), since it follows the rounded
-    corners;
-  - the edge strips add only the coloured light, cyan on the left to violet-pink on the
-    right. They can't reach into the card's corners.
+  - between the slices, the `work-body` node paints a square fill of exactly the same
+    opaque colour, with no border and no radius, so there is no seam;
+  - the rim, its corners and the fill near the edge are all in the slices. The slices are
+    6px deep inside the rim, more than the 0.3 × radius a corner arc needs, so each corner
+    lies wholly in one picture. A node border plus separate glow strips left gaps and doubled
+    lines at the corners.
+- **Frames sit on the edge:** each framed element's picture is made for its measured size (to
+  a quarter pixel), with the same corner radius and the line centred on the element's edge.
+  The element draws no border of its own. The top highlight fades out before the corners,
+  and the wide light is masked to the outside, so the corners stay clean.
 - **Meters:** CPU needs two samples (it appears on the second refresh). CPU and RAM are Linux
   only and measure the machine the window runs on.
 - **Parsing:** it expects Claude Code's look (`●` tool calls, `─────` lines around the prompt).

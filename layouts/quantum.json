@@ -84,7 +84,7 @@
               "id": "tabs",
               "type": "block",
               "size": {
-                "px": 40
+                "px": 62
               },
               "window_drag": true,
               "content": {
@@ -109,7 +109,7 @@
                       "id": "edge-left",
                       "type": "block",
                       "size": {
-                        "px": 12
+                        "px": 16
                       },
                       "resizable": false,
                       "content": {
@@ -123,7 +123,7 @@
                     {
                       "id": "work-body",
                       "type": "row",
-                      "padding": 6,
+                      "padding": 0,
                       "gap": 8,
                       "children": [
                         {
@@ -192,18 +192,13 @@
                           ]
                         }
                       ],
-                      "background": "#0a1030f2",
-                      "radius": 18,
-                      "border": {
-                        "width": 1,
-                        "color": "#e2d6ffff"
-                      }
+                      "background": "#0b1131"
                     },
                     {
                       "id": "edge-right",
                       "type": "block",
                       "size": {
-                        "px": 12
+                        "px": 16
                       },
                       "resizable": false,
                       "content": {
@@ -220,7 +215,7 @@
                   "id": "edge-bottom",
                   "type": "block",
                   "size": {
-                    "px": 12
+                    "px": 16
                   },
                   "resizable": false,
                   "content": {
@@ -246,74 +241,57 @@
           "resizable": false,
           "children": [
             {
-              "id": "session-frame",
-              "type": "column",
-              "resizable": false,
-              "background": "#080c28d8",
-              "radius": 18,
-              "border": {
-                "width": 1,
-                "color": "#7c7ef0bb"
+              "id": "side-tabs",
+              "type": "block",
+              "size": {
+                "px": 64
               },
+              "content": {
+                "mod": "quantum",
+                "props": {
+                  "role": "sidetabs"
+                }
+              }
+            },
+            {
+              "id": "side-body",
+              "type": "stack",
+              "active": "side-session",
               "children": [
                 {
-                  "id": "side-tabs",
+                  "id": "side-session",
                   "type": "block",
-                  "size": {
-                    "px": 56
-                  },
                   "content": {
                     "mod": "quantum",
                     "props": {
-                      "role": "sidetabs"
+                      "role": "session"
                     }
                   }
                 },
                 {
-                  "id": "side-body",
-                  "type": "stack",
-                  "active": "side-session",
-                  "children": [
-                    {
-                      "id": "side-session",
-                      "type": "block",
-                      "content": {
-                        "mod": "quantum",
-                        "props": {
-                          "role": "session"
-                        }
-                      }
-                    },
-                    {
-                      "id": "side-tasks",
-                      "type": "block",
-                      "padding": [
-                        6,
-                        10
-                      ],
-                      "content": {
-                        "mod": "task-board"
-                      }
-                    },
-                    {
-                      "id": "side-files",
-                      "type": "block",
-                      "padding": [
-                        6,
-                        10
-                      ],
-                      "content": {
-                        "mod": "files"
-                      }
-                    }
-                  ]
+                  "id": "side-tasks",
+                  "type": "block",
+                  "padding": [
+                    6,
+                    10
+                  ],
+                  "content": {
+                    "mod": "task-board"
+                  }
+                },
+                {
+                  "id": "side-files",
+                  "type": "block",
+                  "padding": [
+                    6,
+                    10
+                  ],
+                  "content": {
+                    "mod": "files"
+                  }
                 }
               ]
             }
-          ],
-          "padding": [
-            10,
-            10
           ]
         }
       ]

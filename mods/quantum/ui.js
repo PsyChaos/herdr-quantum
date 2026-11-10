@@ -47,49 +47,52 @@ const TONES = {
 };
 const made = new Map(); // file name -> "pending" | "ready"
 
-// The light around a rounded rect w×h (drawn `spread` px in from the picture's edge):
-// a wide soft glow, a near glow, the crisp line, and a white highlight along the top edge.
-// Brightness falls from the top edge down the sides and rises again toward the bottom.
-// `gloss` (a selected item) also paints the fill: navy with a blue-violet inner glow, so
-// the item looks lit and slightly raised; the picture then sits behind the item.
+// The light around a rounded rect w×h (its edge `spread` px in from the picture's edge),
+// drawn exactly on the element's edge: same box, same corner radius, the line centred on it.
+// A wide glow outside only, a near glow on both sides, the crisp line, and a white highlight
+// along the top that fades out before the corners (so the corners stay clean). Brightness
+// falls from the top down the sides and rises toward the bottom.
+// `gloss` (a selected item) also paints the fill: navy with a blue inner glow, so the item
+// looks lit and slightly raised; the picture then sits behind the item.
 function frameSvg(w, h, { radius, tone, spread, strength, gloss = false, fill = false }) {
   const [hot, mid, low, glint, glow] = TONES[tone] ?? TONES.violet;
-  const W = w + 2 * spread, H = h + 2 * spread, s = spread, r = Math.min(radius, w / 2, h / 2);
+  const W = Math.ceil(w) + 2 * spread, H = Math.ceil(h) + 2 * spread, s = spread, r = Math.min(radius, w / 2, h / 2);
   const k = (x) => Math.min(1, x * strength).toFixed(3);
-  const U = `gradientUnits="userSpaceOnUse"`;
+  const U = `gradientUnits="userSpaceOnUse"`, F = `filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"`;
+  const box = `x="${s}" y="${s}" width="${w}" height="${h}" rx="${r}"`;
   const defs = `<linearGradient id="g" ${U} x1="${s}" y1="${s}" x2="${s + w}" y2="${s + h}">`
     + `<stop offset="0" stop-color="${hot}"/><stop offset="0.3" stop-color="${mid}"/>`
     + `<stop offset="0.65" stop-color="${low}"/><stop offset="1" stop-color="${glint}"/></linearGradient>`
     + `<linearGradient id="v" ${U} x1="0" y1="${s}" x2="0" y2="${s + h}">`
     + `<stop offset="0" stop-color="#fff" stop-opacity="${k(1)}"/>`
     + `<stop offset="${Math.min(0.45, 24 / h).toFixed(3)}" stop-color="#fff" stop-opacity="${k(0.72)}"/>`
-    + `<stop offset="0.5" stop-color="#fff" stop-opacity="${k(0.4)}"/>`
-    + `<stop offset="1" stop-color="#fff" stop-opacity="${k(0.9)}"/></linearGradient>`
+    + `<stop offset="0.5" stop-color="#fff" stop-opacity="${k(0.42)}"/>`
+    + `<stop offset="1" stop-color="#fff" stop-opacity="${k(0.85)}"/></linearGradient>`
+    + `<linearGradient id="hl" ${U} x1="${s + r}" y1="0" x2="${s + w - r}" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/>`
+    + `<stop offset="0.2" stop-color="#fff"/><stop offset="0.8" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>`
     + `<mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="url(#v)"/></mask>`
-    + `<filter id="wide" filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><feGaussianBlur stdDeviation="${(spread * 0.33).toFixed(2)}"/></filter>`
-    + `<filter id="near" filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><feGaussianBlur stdDeviation="1.1"/></filter>`;
-  const rr = (extra) => `<rect x="${s}" y="${s}" width="${w}" height="${h}" rx="${r}" ${extra}/>`;
-  const line = (sw, color, extra) => rr(`fill="none" stroke="${color}" stroke-width="${sw}" ${extra}`);
+    + `<mask id="o" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#fff"/><rect ${box} fill="#000"/></mask>`
+    + `<filter id="wide" ${F}><feGaussianBlur stdDeviation="${(spread * 0.3).toFixed(2)}"/></filter>`
+    + `<filter id="near" ${F}><feGaussianBlur stdDeviation="0.9"/></filter>`;
+  const line = (sw, color, extra) => `<rect ${box} fill="none" stroke="${color}" stroke-width="${sw}" ${extra}/>`;
   let body = "";
   if (gloss) {
     body += `<linearGradient id="fb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c3aa8"/><stop offset="0.5" stop-color="#18205e"/><stop offset="1" stop-color="#2a2c92"/></linearGradient>`
-      + `<filter id="ig" filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><feGaussianBlur stdDeviation="${Math.max(2, Math.min(5, h / 7)).toFixed(1)}"/></filter>`
-      + `<clipPath id="cl">${rr("")}</clipPath>`
-      + rr(`fill="url(#fb)" fill-opacity="0.92"`)
-      + line(Math.max(6, h / 3.5), glow, `stroke-opacity="0.9" filter="url(#ig)" clip-path="url(#cl)"`)
-      + `<rect x="${s + r * 0.6}" y="${s + 1.5}" width="${Math.max(0, w - r * 1.2)}" height="${Math.max(2, h * 0.3)}" rx="${Math.max(1, h * 0.15)}" fill="#ffffff" opacity="0.08"/>`;
+      + `<filter id="ig" ${F}><feGaussianBlur stdDeviation="${Math.max(2, Math.min(5, h / 7)).toFixed(1)}"/></filter>`
+      + `<clipPath id="cl"><rect ${box}/></clipPath>`
+      + `<rect ${box} fill="url(#fb)" fill-opacity="0.92"/>`
+      + line(Math.max(6, h / 3.5), glow, `stroke-opacity="0.9" filter="url(#ig)" clip-path="url(#cl)"`);
   }
-  if (fill) body += rr(`fill="${glow}" fill-opacity="0.07"`);
-  const top = `M${s + r} ${s}H${s + w - r}`;
+  if (fill) body += `<rect ${box} fill="${glow}" fill-opacity="0.07"/>`;
+  const top = `M${s + r} ${s + 0.6}H${s + w - r}`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${defs}</defs>`
     + body
     + `<g mask="url(#m)">`
-    + line(spread * 0.6, glow, `filter="url(#wide)" opacity="0.8"`)
-    + line(2.4, "url(#g)", `filter="url(#near)" opacity="0.6"`)
+    + `<g mask="url(#o)">` + line(spread * 0.6, glow, `filter="url(#wide)" opacity="0.85"`) + `</g>`
+    + line(2.2, "url(#g)", `filter="url(#near)" opacity="0.55"`)
     + line(1.2, "url(#g)", "")
     + `</g>`
-    + `<path d="${top}" stroke="#ffffff" stroke-width="3" opacity="${k(0.55)}" filter="url(#near)"/>`
-    + `<path d="${top}" stroke="#f4f0ff" stroke-width="1" opacity="${k(0.85)}"/>`
+    + `<path d="${top}" stroke="url(#hl)" stroke-width="1" opacity="${k(0.75)}"/>`
     + `</svg>`;
 }
 
@@ -115,26 +118,39 @@ export function ensurePic(cx, name, make) {
   return null;
 }
 
-// The terminal card's neon, for a card W×H (in card coordinates; the panes fill it but for
-// the 12px edge strips on its sides and bottom). The picture is W wide and H + spread tall:
-// `spread` px above the card for the light over its top edge. Only the light: the crisp,
-// rounded line is the work-body node's own border (the strips can't reach into the
-// card's corners). The light is coloured: cyan at the top-left, dim violet
-// along the top, bright violet-pink along the bottom.
-export function cardSvg(W, H, { radius = 12, spread = 12 } = {}) {
-  const s = spread, PH = H + s;
-  const x0 = 11.5, yTop = s + 0.5, yBot = s + H - 12 - 0.5;
-  const w = W - 2 * x0, h = yBot - yTop;
-  const blur = (id, sd) => `<filter id="${id}" filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${PH}"><feGaussianBlur stdDeviation="${sd}"/></filter>`;
-  const grad = `<linearGradient id="g" gradientUnits="userSpaceOnUse" x1="${x0}" y1="0" x2="${x0 + w}" y2="0">`
-    + `<stop offset="0" stop-color="#e08bff"/><stop offset="0.3" stop-color="#8c6cff"/>`
-    + `<stop offset="0.7" stop-color="#5c7cff"/><stop offset="1" stop-color="#3fd8ff"/></linearGradient>`;
-  const rect = (sw, extra) => `<rect x="${x0}" y="${yTop}" width="${w}" height="${h}" rx="${radius}" fill="none" stroke="url(#g)" stroke-width="${sw}" ${extra}/>`;
-  const bottom = `M${x0 + radius} ${yBot}H${x0 + w - radius}`, top = `M${x0 + radius} ${yTop}H${x0 + w - radius}`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${PH}" viewBox="0 0 ${W} ${PH}"><defs>${grad}${blur("w", 3.6)}${blur("n", 1.5)}</defs>`
-    + rect(6, `filter="url(#w)" opacity="1"`) + rect(2.5, `filter="url(#n)" opacity="1"`) + rect(1.2, `opacity="0.9"`)
-    + `<path d="${bottom}" stroke="#f0a8ff" stroke-width="10" opacity="0.9" filter="url(#w)"/>`
-    + `<path d="${top}" stroke="#8ab0ff" stroke-width="6" opacity="0.6" filter="url(#w)"/>`
+// The terminal card, as one picture W×H of the card plus its light: `CARD.m` px of light
+// outside the rim on every side, then the rounded card (radius `CARD.r`, opaque fill
+// `CARD.fill`, the crisp line on its edge, a thin light inside). The picture is shown in
+// slices by the blocks round the card: the tab bar shows its top `CARD.t` px, the "edge"
+// blocks (`CARD.t` px thick) its sides and bottom. The panes sit in the middle, on the
+// work-body node's square fill of the same colour, `CARD.t - CARD.m` px inside the rim:
+// enough for the corner arcs to lie wholly in the slices, so the rim is one unbroken line.
+export const CARD = { m: 10, t: 16, r: 16, fill: "#0b1131" };
+export function cardSvg(W, H) {
+  const { m, r, fill } = CARD;
+  const x = m, y = m, w = W - 2 * m, h = H - 2 * m;
+  const U = `gradientUnits="userSpaceOnUse"`, F = `filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"`;
+  const box = `x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}"`;
+  const fade = (id, c) => `<linearGradient id="${id}" ${U} x1="${x + r}" y1="0" x2="${x + w - r}" y2="0"><stop offset="0" stop-color="${c}" stop-opacity="0"/>`
+    + `<stop offset="0.12" stop-color="${c}"/><stop offset="0.88" stop-color="${c}"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient>`;
+  const defs = `<linearGradient id="g" ${U} x1="${x}" y1="0" x2="${x + w}" y2="0">`
+    + `<stop offset="0" stop-color="#e08bff"/><stop offset="0.3" stop-color="#9b7bff"/>`
+    + `<stop offset="0.7" stop-color="#5c8cff"/><stop offset="1" stop-color="#3fd8ff"/></linearGradient>`
+    + fade("bt", "#f0a8ff") + fade("tp", "#9ab8ff") + fade("hl", "#ffffff")
+    + `<mask id="o" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#fff"/><rect ${box} fill="#000"/></mask>`
+    + `<clipPath id="c"><rect ${box}/></clipPath>`
+    + `<filter id="w" ${F}><feGaussianBlur stdDeviation="3.2"/></filter><filter id="n" ${F}><feGaussianBlur stdDeviation="0.9"/></filter>`;
+  const ring = (sw, stroke, extra) => `<rect ${box} fill="none" stroke="${stroke}" stroke-width="${sw}" ${extra}/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${defs}</defs>`
+    + `<rect ${box} fill="${fill}"/>`
+    + `<g mask="url(#o)">` + ring(7, "url(#g)", `filter="url(#w)"`)
+    + `<path d="M${x + r} ${y + h}H${x + w - r}" stroke="url(#bt)" stroke-width="8" filter="url(#w)"/>`
+    + `<path d="M${x + r} ${y}H${x + w - r}" stroke="url(#tp)" stroke-width="4" opacity="0.7" filter="url(#w)"/></g>`
+    + `<g clip-path="url(#c)">` + ring(3, "url(#g)", `filter="url(#n)" opacity="0.6"`)
+    + `<path d="M${x + r} ${y + h}H${x + w - r}" stroke="url(#bt)" stroke-width="3" opacity="0.6" filter="url(#n)"/></g>`
+    + ring(1.3, "url(#g)", "")
+    + `<path d="M${x + r} ${y + 0.6}H${x + w - r}" stroke="url(#hl)" stroke-width="1" opacity="0.55"/>`
+    + `<path d="M${x + r} ${y + h - 0.6}H${x + w - r}" stroke="url(#hl)" stroke-width="1" opacity="0.7"/>`
     + `</svg>`;
 }
 
@@ -164,12 +180,13 @@ export function barPic(cx, w, h, pct, lit) {
 // `.relative()`); null until it has been written.
 function framePic(cx, size, opts) {
   if (!size) return null;
-  const w = Math.round(size.width), h = Math.round(size.height);
+  // The element's own size to a quarter pixel, so the drawn edge lands on its edge.
+  const w = Math.round(size.width * 4) / 4, h = Math.round(size.height * 4) / 4;
   if (w < 4 || h < 4) return null;
   const { radius, tone, spread, strength, gloss = false, fill = false } = opts;
-  const name = `v6-${tone}-${radius}-${spread}-${Math.round(strength * 100)}-${gloss ? "g" : ""}${fill ? "f" : ""}-${w}x${h}.svg`;
+  const name = `v7-${tone}-${radius}-${spread}-${Math.round(strength * 100)}-${gloss ? "g" : ""}${fill ? "f" : ""}-${w}x${h}.svg`;
   const rel = ensurePic(cx, name, () => frameSvg(w, h, { radius, tone, spread, strength, gloss, fill }));
-  if (rel) return image(rel).absolute().left(-spread).top(-spread).w(w + 2 * spread).h(h + 2 * spread);
+  if (rel) return image(rel).absolute().left(-spread).top(-spread).w(Math.ceil(w) + 2 * spread).h(Math.ceil(h) + 2 * spread);
   return null;
 }
 
@@ -192,7 +209,7 @@ export function neon(view, cx, key, el, { on = true, radius = 12, tone = "violet
 
 // A glass panel filling its block, framed in neon. Leaves `margin` px around it for the light.
 export function panel(view, cx, key, content, { radius = 18, tone = "violet", strength = 1, margin = 10, pad = 0, id } = {}) {
-  const box = div().size_full().rounded(radius).bg(C.glass).border(1).border_color("#9b7bff30").overflow_hidden().p(pad).child(content);
+  const box = div().size_full().rounded(radius).bg(C.glass).overflow_hidden().p(pad).child(content);
   const inner = div().id(`pz-${key}`).relative().size_full()
     .on_size_change((size, cx) => {
       const old = view.sizes[key];
