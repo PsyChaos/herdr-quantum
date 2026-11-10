@@ -75,7 +75,7 @@ export default class Quantum extends View {
     this.sizes = {};
     if (this.role === "session" || this.role === "status") {
       this.refresh(cx);
-      cx.timer.every(this.role === "session" ? 2500 : 3000, (cx) => this.refresh(cx));
+      cx.timer.every(this.role === "session" ? 4000 : 5000, (cx) => this.refresh(cx));
     }
     if (this.role === "sidebar") cx.timer.every(30000, (cx) => cx.notify()); // "4m ago" labels
   }
@@ -95,7 +95,7 @@ export default class Quantum extends View {
       const a = this.target();
       if (a) {
         try {
-          const r = await hc(["read", a.address, "--lines", this.role === "session" ? "400" : "0"]);
+          const r = await hc(["read", a.address, "--lines", this.role === "session" ? "120" : "0"]);
           if (r.code === 0) this.screen = { address: a.address, ...parseScreen(r.stdout) };
         } catch (_) { /* unreachable machine: keep the last screen */ }
       } else this.screen = {};
@@ -251,7 +251,7 @@ export default class Quantum extends View {
         .when(subs.length > 0, (el) => el.child(div().text_size(10).text_color(C.dim).child(folded ? "›" : "⌄")))
         .child(div().w(24).flex_none().text_right().text_size(11).text_color(C.dim).child(ago(tabOf(a)?.changed_at)))
         .child(statusMark(a.status, 13));
-      const wrapped = div().px(10).py(1).child(neon(this, cx, `ag-${a.address}`, row, { on: hot, radius: 9, spread: 8, tone: a.status === "working" ? "cyan" : "violet", pulse: a.status === "working" }));
+      const wrapped = div().px(10).py(1).child(neon(this, cx, `ag-${a.address}`, row, { on: hot, radius: 9, spread: 8, tone: a.status === "working" ? "cyan" : "violet"}));
       return [wrapped, ...(folded ? [] : subs.flatMap((s) => agentRow(s, depth + 1)))];
     };
 
@@ -384,7 +384,7 @@ export default class Quantum extends View {
       .child(div().flex_1().truncate().text_color(C.text).child(value || "—"));
 
     const pillEl = div().px(10).py(3).rounded(11).bg(sc + "22").border(1).border_color("#00000000").text_size(11.5).font_medium().text_color(sc).child(st);
-    const runCard = card("q-run", "Current Run", "activity", neon(this, cx, "pill", pillEl, { radius: 11, spread: 7, tone: { [C.cyan]: "cyan", [C.amber]: "amber", [C.green]: "green" }[sc] ?? "violet", pulse: working, full: false }), true)
+    const runCard = card("q-run", "Current Run", "activity", neon(this, cx, "pill", pillEl, { radius: 11, spread: 7, tone: { [C.cyan]: "cyan", [C.amber]: "amber", [C.green]: "green" }[sc] ?? "violet", full: false }), true)
       .when(!a, (el) => el.child(div().text_size(12.5).text_color(C.muted).child("Focus an agent's pane to see its run.")))
       .when(Boolean(a), (el) => el
         .child(row("terminal", "Agent", a.program?.name ?? a.app ?? "agent", programIcon(a.program, 14)))
@@ -409,7 +409,7 @@ export default class Quantum extends View {
           .when(live, (el) => el.bg("#1b2a7a88").border(1).border_color("#00000000"))
           .child(live ? div().w(13).flex_none().text_color(C.cyan).frames(SPIN, 90).child("⠋") : icon("check", 13, C.green))
           .child(div().flex_1().truncate().font_family("JetBrains Mono").text_color(i === 0 ? "#ffffff" : C.muted).child(c));
-        return neon(this, cx, `cmd-${i}`, line, { on: live, radius: 8, spread: 7, tone: "cyan", pulse: true });
+        return neon(this, cx, `cmd-${i}`, line, { on: live, radius: 8, spread: 7, tone: "cyan"});
       }));
 
     const out = card("q-out", "Run Output", "list")
