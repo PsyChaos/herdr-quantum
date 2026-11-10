@@ -1,110 +1,162 @@
 # Quantum
 
-A deep-space layout for Herdr: the whole window sits on a violet and cyan nebula with a ringed
-planet and a glowing horizon, and every region floats over it as a rounded glass card. A title bar
-with a command search runs across the top. The spaces and agents are on the left, the terminals
-in the middle, a live "Session" panel on the right, and a status bar with the machine, branch,
-agents, CPU, RAM and tokens along the bottom.
+A deep-space layout for Herdr. The window sits on a violet and blue nebula, with a ringed planet
+at the top and the glowing rim of a giant planet along the bottom. Every region is a dark glass
+card whose edges catch the light: a thin rim that runs bright cyan from the top-left corner and
+fades to violet along each edge, spilling a little light around its brightest parts. From top to
+bottom: a title bar with a command search; then the workspaces and agents, the terminals and a
+live Session panel side by side; then a status bar.
 
 ![Quantum](preview.png)
 
 ## What you see
 
-- **Background:** `mods/quantum/nebula.jpg` (2560×1440, generated art), `cover`, behind everything.
-  The root is a column with 8px vertical and 10px horizontal padding and an 8px gap.
-- **Title bar (52px, draggable):**
-  - The atom logo (`logo.svg`, 34px) and "Herdr" at 22px bold.
-  - A pill search field, 38px high, at most 620px wide: `#0b0e33cc` fill and a `#8b6cffaa`
-    border that turns cyan `#4fd8ff` on hover. It shows the palette key when one is bound.
-  - Help and settings buttons and a planet orb (`orb.svg`) on the right.
-- **Body:** a row with a 10px gap.
-  - **Sidebar (268px):** Herdr's `spaces` and `agents`, then the `workspace-chrome` footer
-    (Settings, Add machine). Glass `#0c0f34b8`, radius 16, a `#6f74f066` border and a large shadow.
-  - **Work area:**
-    - Glass `#0b0e30a6`, radius 16, a `#8b6cff88` border, 8px padding.
-    - Herdr's `tabs` sit on top, then the active tab. Panes are cards with radius 12 and a
-      `#6f74f066` border; the focused pane's border is cyan `#4fd8ff`. Each pane has Herdr's
-      `pane` header (32px).
-    - Terminals are drawn at 0.86 opacity over `#090b26`, so the nebula glows through faintly.
-    - The Files/Changes panel (368px, hidden) sits beside the panes as in Herdr's main layout.
-  - **Session panel (330px):** three cards with radius 14, fill `#121646d0` and border `#5d63d855`,
-    under a segmented header (Session, Files, Changes).
-- **Status bar (38px):** glass, radius 14. From the left: machine, branch, agent count. On the
-  right: CPU, RAM (used/total/percent), the focused agent's ↑/↓ tokens, and "commands".
-- **Theme:** `themes/quantum.json`, a navy `#0a0b26` terminal with cyan, violet and pink ANSI.
-  The layout's `colors` make `canvas` transparent and `chrome`/`surface` translucent, so the
-  shipped mods turn to glass too.
-- **Type:** Geist for the UI; JetBrains Mono for terminals and the command and output lines.
+- **Background:** `mods/quantum/space.jpg` (2560×1440, `cover`), made by `art/nebula.py`. It has:
+  - nebulae from four fractal-noise layers in violet `#7b3cff`, blue `#2f6bff`, magenta
+    `#d23cff` and cyan `#2fd0ff`;
+  - about 1800 stars, 26 of them with four-point glints;
+  - a ringed planet near the top right, its ring glowing and tilted −16°;
+  - a horizon planet whose rim is a white line with a violet bloom and a lens flare at the top;
+  - neon swirls in the lower corners.
+- **Edge light:** the look shared by every card.
+  - **Core line:** 1px, its brightness and color changing along the edge.
+  - **Spill:** two wider strips (3px at 30% and 7px at 10%) that follow the core line, so light
+    scatters only where the line is bright.
+  - **Panels:** light falls from the top-left. The top and left edges run cyan `#6ee7ff` →
+    violet `#9b7bff` → pink `#d16bff` and fade along their length. The bottom has a glint left of
+    center, the right edge a faint one high up. There is also a soft cyan spot of light
+    (`halo-cyan.png`) on the top-left corner.
+  - **Items:** active rows, tabs and pills have the same light, lit across the top.
+  - **Base:** every glass card is fill `#0c0f34c4` with a 1px `#9b7bff40` border.
+- **Title bar (56px, draggable):**
+  - The atom logo over a violet halo, and "Herdr" at 23px bold.
+  - A 38px pill search field with an edge light and the palette key on a keycap.
+  - Help, settings and a planet orb on the right. Window buttons appear where the system draws
+    none.
+- **Workspaces and agents (276px):**
+  - **Header:** "Workspaces" with a + button.
+  - **Spaces:** grouped under "This computer" and each machine. The machine row has a green,
+    amber or gray dot for its state and a + button.
+  - **Space rows:** a colored letter tile (from the name), the name, the space's status, and its
+    repo and branch in dim text. The active row is a violet glass pill with an edge light.
+  - **Agents:** grouped as Pinned, Needs you (amber), Working (cyan), Done and Idle, each group
+    with its count.
+  - **Agent rows:** the program icon, space and tab, machine, time since the last change, and a
+    status mark. The mark is a braille spinner for working, an amber "!" for blocked, a green dot
+    for done and a ring for idle.
+  - **Sub-agents:** nested under their parent with "└". Clicking the parent's icon folds them.
+  - **Footer:** Settings and Add machine.
+- **Work area:**
+  - Glass `#0b0e30b0`, radius 16, a `#9b7bff66` border and three faint outer rings.
+  - **Tab bar (44px):** a grid button (picker), the tabs as 32px pills, then +, Files and Changes.
+    The active tab is a violet glass pill with an edge light. The top edge of the work area is lit
+    by the tab bar mod.
+  - **Panes:** cards with radius 12 and a `#8b6cff66` border; the focused pane's border is cyan.
+    Each has Herdr's `pane` header.
+  - **Terminals:** opacity 0.86 over `#090b26`.
+- **Session panel (330px):**
+  - **Header:** a segmented control (Session, Files, Changes).
+  - **Cards:** Current Run, Recent Commands and Run Output, each an edge-lit card.
+- **Status bar (44px):** machine, branch, agent count with a glowing dot, CPU, RAM, ↑↓ tokens,
+  and "commands".
+- **Theme:** `themes/quantum.json`: terminal `#0a0b26`, foreground `#dfe4ff`, cyan cursor and
+  neon ANSI colors. The layout's `colors` make `canvas` transparent and the panels translucent.
+- **Type:** Geist for the UI; JetBrains Mono for commands and output.
 
 ## How it behaves
 
-- **The run it follows:** the focused agent. With no agent focused it follows the most recent
-  agent in the shown tab, then in the shown space. With none, it says "Focus an agent's pane to
-  see its run."
+- **The run it follows:** the focused agent. With none focused, the most recent agent of the
+  shown tab, then of the shown space. With none at all, it says "Focus an agent's pane to see its
+  run."
 - **Current Run:**
-  - A status pill: Running in cyan for working, Needs you in amber for blocked, Done in green,
-    Idle in dim.
-  - Rows for the agent (with its program icon), project folder, workspace and machine, branch,
-    model (effort), started, and tokens.
-  - Started is the tab's `working_since`, or else its `changed_at`, written as "1m 17s ago".
-  - A context bar: 28 segments shading from cyan to violet, the percent left, and
-    "used of size · limit 5h x% · 7d y%".
-- **Recent Commands:** the last six `● Bash(...)` calls on the agent's screen, newest first.
-  - The newest shows a braille spinner (`.frames`) while the agent works; the others show a
-    green check.
+  - A status pill with its own edge light: Running in cyan (breathing), Needs you in amber, Done
+    in green, Idle in dim.
+  - Rows for agent, project, workspace and machine, branch, model (effort), started, and tokens.
+  - A 30-segment context bar shading from cyan to violet. It breathes while the agent works and
+    shows the percent left and the 5-hour and 7-day limits.
+- **Recent Commands:** the last six `● Bash(...)` calls, newest first. The newest has a spinner
+  and a breathing cyan rim while the agent works.
 - **Run Output:** the last seven conversation lines above the agent's prompt box.
-- **Session panel buttons:** Files and Changes select the matching child of `panel-body` and
-  toggle `panel`.
-- **Title bar:** the search field runs `app.palette`, help runs `app.help`, settings runs
-  `app.settings`.
-- **Status bar:** "commands" opens the palette. "N need you" appears in amber when agents are
-  blocked.
-- **Refresh:** the session panel refreshes every 2.5s and the status bar every 3s. Nothing
-  animates on a timer.
+- **Clicks and keys:**
+  - A space row selects the space; its + makes a new one on that machine.
+  - An agent row focuses its pane.
+  - A tab selects; double-click renames; right-click opens the tab menu.
+  - Scrolling over the tab bar steps through the tabs.
+  - Files and Changes toggle the side panel.
+  - Search and "commands" open the palette.
+- **Refresh:** the session panel every 2.5s, the status bar every 3s, and the sidebar's
+  "4m" labels every 30s. Spinners and breathing use native `.frames` and `.loop`, never a
+  timer.
 
 ## Built from
 
 - **Layout:** `layouts/quantum.json`.
-  - Root `column`: `top` (block), then `body` (row: `sidebar` column, `work` column, `session`
-    block), then `status` (block).
+  - Root `column`:
+    - `top`: block, `quantum` with `role: "top"`.
+    - `body`: row of `sidebar` (block, `role: "sidebar"`), `work-frame` and `session` (block,
+      `role: "session"`).
+    - `status`: block, `role: "status"`.
+  - Inside `work-frame`, `work-glow3` → `work-glow1` (three ring columns) wrap `work`, which holds
+    `tabs` (`role: "tabs"`) and `work-body`. `work-body` contains the active tab, and the `panel`
+    stack of `files` and `changes`.
   - Root settings: `titlebar: "none"`, `theme: "quantum"` plus `colors` overrides,
-    `terminal_opacity: 0.86`, and a `background.image`.
-- **Mod:** one mod, `mods/quantum`, with `props.role` set to `top`, `session` or `status`.
-- **Shipped mods used:** `spaces`, `agents`, `workspace-chrome` (footer), `tabs`, `pane`, `files`,
-  `changes`. Icons are borrowed from `mods/workspace-chrome/*.svg`.
+    `terminal_opacity: 0.86`, and the background image.
+- **Mod:** `mods/quantum`.
+  - `main.js` holds the five roles. `ui.js` holds the palette, `rim` (edge light),
+    `edge` (one lit edge), `panel`, `lit`, `bar`, `halo`, letter tiles, status marks and `ago`.
+- **Shipped mods used:** `pane` (pane headers), `files`, `changes`; `new-menu`, `menu`, `picker`
+  and `machine-add` as overlays. Some icons come from `mods/workspace-chrome`, `mods/pane`,
+  `mods/files` and `mods/changes`.
 - **`herdr` API used:**
-  - Data: `agents()`, `spaces()`, `panes()`, `focused()`, `keys()`, `window()`, `home()`.
-  - Commands, through `run`: `app.palette`, `app.help`, `app.settings`, `layout.select`,
-    `layout.toggle`.
+  - Data: `spaces()`, `agents()`, `terminals()` (for `parent`), `machines()`, `panes()`,
+    `focused()`, `layout()`, `shared("workspace.panels")`, `keys()`, `window()`, `home()`.
+  - Overlays: `openOverlay`.
+  - Commands, through `run`: `space.select`, `space.new`, `pane.focus`, `tab.select`, `tab.close`,
+    `tab.rename`, `tab.prev`, `tab.next`, `layout.select`, `layout.show`, `layout.hide`,
+    `layout.toggle`, `app.palette`, `app.help`, `app.settings`, `mod.open`, and the
+    `window.minimize`, `window.maximize` and `window.close` buttons.
 - **Programs and files read:**
   - `hc read <agent> --lines 400` (session) or `--lines 0` (status), for the agent's screen.
-  - `readTextFile("/proc/stat")` and `readTextFile("/proc/meminfo")`, for CPU and RAM.
+  - `/proc/stat` and `/proc/meminfo`, read with `readTextFile`, for CPU and RAM.
 - **What the screen is parsed for:**
-  - The model, effort, context, tokens and limits come from a status line of this shape:
-    `Model · effort | branch | ctx <bar> %NN used/size | ↑in ↓out | limit 5s A% · 7g B%`.
-    The companion Claude Code status line script, `extras/claude-statusline.sh`, prints it.
-  - Without such a line, those rows show "—".
-- **Art:** `nebula.jpg` was rasterized from an SVG: fractal-noise nebulae, radial glows, about
-  900 stars, a ringed planet and a horizon arc.
+  - The status line: `Model · effort | branch | ctx <bar> %NN used/size | ↑in ↓out | limit 5s A% · 7g B%`.
+    `extras/claude-statusline.sh` prints it for Claude Code.
+  - The progress line: `✻ Verb… (time · ↓ tokens · …)`.
+- **Art:** `art/nebula.py` (SVG rasterized with `rsvg-convert`); `halo-*.png` (radial gradients);
+  `logo.svg`, `orb.svg` and line icons.
+- **Preview:** `art/demo-agent.sh` is a fake agent used to stage `preview.png`. It ran in a
+  separate `HC_SESSION`, with made-up spaces.
 
 ## Watch out
 
-- Elements take solid colors only (no gradients), so the context bar is built from 28 solid
-  segments of fixed width.
-- `padding` takes a number or `[vertical, horizontal]`; four values are not accepted.
-- Theme files take `#rrggbb` only. Translucency belongs in the layout's `colors`, as `#rrggbbaa`.
-- The CPU reading needs two samples, so it appears on the second refresh. CPU and RAM read
-  `/proc`, so they are Linux only and hidden elsewhere.
-- The meters measure the machine the window runs on, not the space's machine.
-- The parsing expects Claude Code's look: `●` tool calls and `─────` lines around the prompt.
-  Other agents still get the status, folder, branch and timing rows.
+- **Light without CSS:** elements take solid colors only (no gradients, blur or colored
+  shadows). So:
+  - each lit edge is a row of 20 solid segments, and the spill is the same row drawn wider and
+    fainter;
+  - lights sit in `absolute` children of a `relative` box, so they never move the layout;
+  - the edges start `radius` px from each corner, so corners keep the dim base border.
+- **Images don't stretch:** `image()` keeps its aspect ratio, so glows from pictures only work
+  for round spots (`halo`).
+- **Padding:** it is a number or `[vertical, horizontal]`. Theme files take `#rrggbb` only;
+  translucency goes in the layout's `colors` as `#rrggbbaa`.
+- **Image cache:** the app caches images by path. Rename a picture (as `nebula.jpg` became
+  `space.jpg`) to see a new version at once.
+- **Layout borders:** the work area's border comes from the layout, so it can't be
+  gradient-lit. Only its top edge is lit, by the tab bar mod (work `padding: 0`, so the tab bar
+  touches it).
+- **Meters:** CPU needs two samples (it appears on the second refresh). CPU and RAM are Linux
+  only and measure the machine the window runs on.
+- **Parsing:** it expects Claude Code's look (`●` tool calls, `─────` lines around the prompt).
+  Other agents still get status, folder, branch and timing.
 
 ## Done when
 
 - `herdr-app check mods/quantum` passes, and `layout.switch {"name":"quantum"}` shows the nebula
-  behind glass sidebar, work and session cards, with no `layout.error`.
-- Focusing a Claude Code pane shows its model, effort, tokens and context bar in Current Run
-  within 3 seconds.
-- The search field opens the command palette. Files in the session header opens the Files panel
-  beside the panes, and a second click closes it.
-- The status bar shows CPU and RAM on Linux within 6 seconds.
+  and planets behind edge-lit glass cards, with no layout error.
+- Focusing a Claude Code pane fills Current Run within 3s: model, effort, tokens, and the context
+  bar with its percent.
+- A working agent shows a cyan spinner and a breathing rim in the sidebar, in Recent Commands
+  and on the Running pill.
+- Clicking a space row switches spaces. The search field opens the palette. Files in the session
+  header opens the Files panel beside the panes, and a second click closes it.
+- CPU and RAM appear in the status bar on Linux within 6s.

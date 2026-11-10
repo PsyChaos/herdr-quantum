@@ -2,7 +2,10 @@
   "id": "root",
   "type": "column",
   "titlebar": "none",
-  "traffic_lights": [18, 22],
+  "traffic_lights": [
+    18,
+    22
+  ],
   "preview": "mods/quantum/preview.png",
   "theme": "quantum",
   "colors": {
@@ -19,102 +22,208 @@
     "muted": "#a3a9e0",
     "dim": "#6d73b3"
   },
-  "terminal_padding": [14, 12],
+  "terminal_padding": [
+    14,
+    12
+  ],
   "terminal_opacity": 0.86,
-  "background": { "image": "mods/quantum/nebula.jpg", "fit": "cover" },
-  "padding": [8, 10],
-  "gap": 8,
+  "background": {
+    "image": "mods/quantum/space.jpg",
+    "fit": "cover"
+  },
+  "padding": [
+    4,
+    6
+  ],
+  "gap": 0,
   "children": [
     {
       "id": "top",
       "type": "block",
-      "size": { "px": 52 },
+      "size": {
+        "px": 56
+      },
       "window_drag": true,
-      "content": { "mod": "quantum", "props": { "role": "top" } }
+      "content": {
+        "mod": "quantum",
+        "props": {
+          "role": "top"
+        }
+      }
     },
     {
       "id": "body",
       "type": "row",
-      "gap": 10,
+      "gap": 0,
       "resizable": true,
       "children": [
         {
           "id": "sidebar",
-          "type": "column",
-          "size": { "px": 268 },
-          "min": 44,
+          "type": "block",
+          "size": {
+            "px": 276
+          },
+          "min": 230,
           "max": 480,
-          "background": "chrome",
-          "radius": 16,
-          "border": { "width": 1, "color": "#6f74f066" },
-          "shadow": "lg",
-          "padding": [8, 0],
-          "resizable": false,
-          "children": [
-            {
-              "id": "sidebar-lists",
-              "type": "column",
-              "children": [
-                { "id": "spaces", "type": "block", "size": { "weight": 1 }, "min": 90, "content": { "mod": "spaces" } },
-                { "id": "agents", "type": "block", "size": { "weight": 1 }, "min": 90, "content": { "mod": "agents" } }
-              ]
-            },
-            {
-              "id": "sidebar-footer",
-              "type": "block",
-              "size": { "px": 69 },
-              "content": { "mod": "workspace-chrome", "props": { "footer": true } }
+          "content": {
+            "mod": "quantum",
+            "props": {
+              "role": "sidebar"
             }
-          ]
+          }
         },
         {
-          "id": "work",
+          "id": "work-frame",
           "type": "column",
-          "background": "#0b0e30a6",
-          "radius": 16,
-          "border": { "width": 1, "color": "#8b6cff88" },
-          "shadow": "lg",
-          "padding": 8,
+          "padding": [
+            4,
+            3
+          ],
+          "size": {
+            "weight": 1
+          },
           "resizable": false,
           "children": [
-            { "id": "tabs", "type": "block", "size": { "px": 42 }, "window_drag": true, "content": { "mod": "tabs" } },
             {
-              "id": "work-body",
-              "type": "row",
+              "id": "work-glow3",
+              "type": "column",
+              "radius": 19,
               "padding": 0,
-              "gap": 8,
+              "border": {
+                "width": 1,
+                "color": "#8b6cff0c"
+              },
+              "size": {
+                "weight": 1
+              },
+              "resizable": false,
               "children": [
                 {
-                  "id": "main",
-                  "type": "block",
-                  "content": {
-                    "tab": "active",
-                    "pane": {
-                      "gap": 8,
-                      "radius": 12,
-                      "background": "background",
-                      "lone": true,
-                      "border": { "width": 1, "color": "#6f74f066" },
-                      "focus": { "width": 1, "color": "#4fd8ff" },
-                      "header": { "content": { "mod": "pane" }, "height": 32, "position": "top", "reveal": "always" }
-                    }
-                  }
-                },
-                {
-                  "id": "panel",
+                  "id": "work-glow2",
                   "type": "column",
-                  "hidden": true,
-                  "size": { "px": 368 },
-                  "min": 280,
-                  "max": 900,
+                  "radius": 18,
+                  "padding": 0,
+                  "border": {
+                    "width": 1,
+                    "color": "#8b6cff1c"
+                  },
+                  "size": {
+                    "weight": 1
+                  },
+                  "resizable": false,
                   "children": [
                     {
-                      "id": "panel-body",
-                      "type": "stack",
-                      "active": "files",
+                      "id": "work-glow1",
+                      "type": "column",
+                      "radius": 17,
+                      "padding": 0,
+                      "border": {
+                        "width": 1,
+                        "color": "#8b6cff38"
+                      },
+                      "size": {
+                        "weight": 1
+                      },
+                      "resizable": false,
                       "children": [
-                        { "id": "files", "type": "block", "content": { "mod": "files" } },
-                        { "id": "changes", "type": "block", "content": { "mod": "changes" } }
+                        {
+                          "id": "work",
+                          "type": "column",
+                          "padding": 0,
+                          "resizable": false,
+                          "children": [
+                            {
+                              "id": "tabs",
+                              "type": "block",
+                              "size": {
+                                "px": 44
+                              },
+                              "window_drag": true,
+                              "content": {
+                                "mod": "quantum",
+                                "props": {
+                                  "role": "tabs"
+                                }
+                              }
+                            },
+                            {
+                              "id": "work-body",
+                              "type": "row",
+                              "padding": 8,
+                              "gap": 8,
+                              "children": [
+                                {
+                                  "id": "main",
+                                  "type": "block",
+                                  "content": {
+                                    "tab": "active",
+                                    "pane": {
+                                      "gap": 8,
+                                      "radius": 12,
+                                      "background": "background",
+                                      "lone": true,
+                                      "border": {
+                                        "width": 1,
+                                        "color": "#8b6cff66"
+                                      },
+                                      "focus": {
+                                        "width": 1,
+                                        "color": "#4fd8ff"
+                                      },
+                                      "header": {
+                                        "content": {
+                                          "mod": "pane"
+                                        },
+                                        "height": 32,
+                                        "position": "top",
+                                        "reveal": "always"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "panel",
+                                  "type": "column",
+                                  "hidden": true,
+                                  "size": {
+                                    "px": 368
+                                  },
+                                  "min": 280,
+                                  "max": 900,
+                                  "children": [
+                                    {
+                                      "id": "panel-body",
+                                      "type": "stack",
+                                      "active": "files",
+                                      "children": [
+                                        {
+                                          "id": "files",
+                                          "type": "block",
+                                          "content": {
+                                            "mod": "files"
+                                          }
+                                        },
+                                        {
+                                          "id": "changes",
+                                          "type": "block",
+                                          "content": {
+                                            "mod": "changes"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "background": "#0b0e30b0",
+                          "radius": 16,
+                          "border": {
+                            "width": 1,
+                            "color": "#9b7bff66"
+                          }
+                        }
                       ]
                     }
                   ]
@@ -126,21 +235,32 @@
         {
           "id": "session",
           "type": "block",
-          "size": { "px": 330 },
+          "size": {
+            "px": 330
+          },
           "min": 260,
           "max": 520,
-          "content": { "mod": "quantum", "props": { "role": "session" } }
+          "content": {
+            "mod": "quantum",
+            "props": {
+              "role": "session"
+            }
+          }
         }
       ]
     },
     {
       "id": "status",
       "type": "block",
-      "size": { "px": 38 },
-      "background": "chrome",
-      "radius": 14,
-      "border": { "width": 1, "color": "#6f74f066" },
-      "content": { "mod": "quantum", "props": { "role": "status" } }
+      "size": {
+        "px": 44
+      },
+      "content": {
+        "mod": "quantum",
+        "props": {
+          "role": "status"
+        }
+      }
     }
   ]
 }
