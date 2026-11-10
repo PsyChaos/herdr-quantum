@@ -68,7 +68,23 @@ function parseScreen(text) {
   const body = (end > 0 ? lines.slice(0, end) : lines).map((l) => l.replace(/\s+$/, ""))
     .filter((l) => l.trim() && !/^[─━]{10,}/.test(l) && !/Update available!/.test(l));
   info.output = body.slice(-7);
+  info.outputAll = body.slice(-60);
   return info;
+}
+
+const BELL = { head: 40, label: 26, row: 42, empty: 60, max: 470 };
+function bellItems(list, tabOf) {
+  const at = (a) => tabOf(a)?.changed_at ?? 0;
+  const newest = (xs) => [...xs].sort((x, y) => at(y) - at(x));
+  const needs = newest(list.filter((a) => a.status === "blocked"));
+  const done = newest(list.filter((a) => a.status === "done"));
+  return { needs, done };
+}
+function bellHeight(list, tabOf) {
+  const { needs, done } = bellItems(list, tabOf);
+  const n = needs.length + done.length;
+  const groups = [needs, done].filter((x) => x.length).length;
+  return Math.min(BELL.max, BELL.head + (n ? groups * BELL.label + n * BELL.row + 6 : BELL.empty) + 2);
 }
 
 export default class Quantum extends View {
@@ -176,7 +192,11 @@ export default class Quantum extends View {
       .child(btn("q-bell", div().relative().size(20)
         .child(icon("bell", 20, C.muted))
         .when(needs > 0 || done > 0, (el) => el.child(div().absolute().top(0).right(0).size(7).rounded_full().bg(needs > 0 ? "#ff6b8a" : C.green))),
-        () => openOverlay({ mod: "quantum", kind: "popup", width: 360, height: Math.min(460, 96 + 44 * Math.max(1, needs + done)), props: { role: "bell" } })))
+        () => {
+          const all = spaces();
+          const tabOf = (a) => all.find((s) => s.id === a.space)?.tabs.find((t) => t.id === a.tab);
+          openOverlay({ mod: "quantum", kind: "popup", width: 360, height: bellHeight(agents(), tabOf), props: { role: "bell" } });
+        }))
       .child(btn("q-help", icon("help", 19, C.muted), () => run("app.help")))
       .child(btn("q-settings", svg("mods/workspace-chrome/settings.svg").size(19), () => run("app.settings")))
       .child(div().relative().size(36).flex_none()
@@ -231,18 +251,30 @@ export default class Quantum extends View {
     };
 
     // Agents, with sub-agents (started by another agent with `hc run`) under their parent.
+    // A sub-agent started with --bg has no pane, so it is only in terminals(), not agents().
     const list = agents();
-    const parent = new Map(terminals().filter((t) => t.parent).map((t) => [t.address, t.parent]));
+    const terms = terminals();
     const qualify = (a, p) => (a.includes("/") && !p.includes("/") ? a.split("/")[0] + "/" + p : p);
     const byAddr = new Map(list.map((a) => [a.address, a]));
     const kids = new Map();
-    const tops = [];
-    for (const a of list) {
-      const p = parent.get(a.address) ?? parent.get(a.address.split("/").pop());
-      const pa = p ? byAddr.get(qualify(a.address, p)) : null;
-      if (pa) { if (!kids.has(pa.address)) kids.set(pa.address, []); kids.get(pa.address).push(a); }
-      else tops.push(a);
+    for (const k of terms) {
+      if (!k.parent || k.state !== "live") continue;
+      const p = qualify(k.address, k.parent);
+      if (!kids.has(p)) kids.set(p, []);
+      kids.get(p).push(k);
     }
+    // A kept sub-agent (one with a pane) is in agents() too: it shows under its parent only.
+    const nested = new Set();
+    const walk = (addr, seen = new Set()) => {
+      for (const k of kids.get(addr) ?? []) if (!seen.has(k.address)) { seen.add(k.address); nested.add(k.address); walk(k.address, seen); }
+    };
+    for (const a of list) walk(a.address);
+    const tops = list.filter((a) => a.pinned || !nested.has(a.address));
+    // Its raw word, error counting as blocked; never done: the parent's done is the news.
+    const kidStatus = (k) => {
+      const st = byAddr.get(k.address)?.status ?? k.status;
+      return st === "error" ? "blocked" : st === "done" ? "idle" : st;
+    };
     const tabOf = (a) => all.find((s) => s.id === a.space)?.tabs.find((t) => t.id === a.tab);
     const groups = [
       ["Pinned", tops.filter((a) => a.pinned)],
@@ -252,27 +284,43 @@ export default class Quantum extends View {
       ["Idle", tops.filter((a) => !a.pinned && a.status === "idle")],
     ].filter(([, xs]) => xs.length);
 
-    const agentRow = (a, depth = 0) => {
+    const subRow = (k, depth, seen) => {
+      const st = kidStatus(k);
+      const subs = (kids.get(k.address) ?? []).filter((x) => !seen.has(x.address));
+      const row = h_flex().id(`q-sub-${k.address}`).h(24).px(8).gap(8).items_center().cursor_pointer()
+        .border(1).border_color("#00000000").hover((x) => x.bg("#ffffff10"))
+        .on_click(() => (byAddr.has(k.address) ? run("pane.focus", { terminal: k.address }) : run("terminal.peek", { terminal: k.address })))
+        .child(div().w(14 * depth).flex_none().text_right().text_color(C.dim).text_size(12).child("└"))
+        .child(programIcon(k.program, 14) ?? icon("terminal", 14, C.muted))
+        .child(div().flex_1().min_w(0).truncate().text_size(12).text_color(st === "idle" ? C.muted : C.text)
+          .child(k.labels?.task || k.name || k.template || k.program?.name || k.address))
+        .child(statusMark(st, 12));
+      const next = new Set([...seen, ...subs.map((x) => x.address)]);
+      return [div().px(10).py(1).child(row), ...subs.flatMap((x) => subRow(x, depth + 1, next))];
+    };
+
+    const agentRow = (a) => {
       const subs = kids.get(a.address) ?? [];
       const folded = this.folded.has(a.address);
       const machine = a.address.includes("/") ? a.address.split("/")[0] : "";
-      const detail = depth ? (a.program?.name ?? a.title) : `${a.space_name}${a.tab_name && !/^\d+$/.test(a.tab_name) ? " · " + a.tab_name : ""}`;
+      const detail = `${a.space_name}${a.tab_name && !/^\d+$/.test(a.tab_name) ? " · " + a.tab_name : ""}`;
       const hot = a.focused || a.status === "working";
       const row = h_flex().id(`q-ag-${a.address}`).h(25).px(8).gap(8).items_center().cursor_pointer()
         .when(hot, (el) => el.border(1).border_color("#00000000"))
         .when(!hot, (el) => el.border(1).border_color("#00000000").hover((st) => st.bg("#ffffff10")))
         .on_click(() => run("pane.focus", { pane: a.pane }))
-        .when(depth > 0, (el) => el.child(div().w(14 * depth).flex_none().text_color(C.dim).text_size(12).child("└")))
         .child(div().id(`q-fold-${a.address}`).when(subs.length > 0, (el) => el.on_click((_e, cx) => {
           cx.stop_propagation(); folded ? this.folded.delete(a.address) : this.folded.add(a.address); cx.notify();
         })).child(programIcon(a.program, 15) ?? icon("terminal", 15, C.muted)))
         .child(div().flex_1().min_w(0).truncate().text_size(12.3).text_color(a.status === "idle" && !a.focused ? C.muted : C.text).child(detail))
-        .when(Boolean(machine) && depth === 0, (el) => el.child(div().max_w(92).truncate().text_size(11).text_color(C.dim).child(machine)))
-        .when(subs.length > 0, (el) => el.child(div().text_size(10).text_color(C.dim).child(folded ? "›" : "⌄")))
+        .when(Boolean(machine), (el) => el.child(div().max_w(92).truncate().text_size(11).text_color(C.dim).child(machine)))
+        .when(subs.length > 0, (el) => el.child(div().id(`q-foldc-${a.address}`).text_size(10.5).text_color(C.dim)
+          .on_click((_e, cx) => { cx.stop_propagation(); folded ? this.folded.delete(a.address) : this.folded.add(a.address); cx.notify(); })
+          .child(folded ? `› ${subs.length}` : "⌄")))
         .child(div().w(24).flex_none().text_right().text_size(11).text_color(C.dim).child(ago(tabOf(a)?.changed_at)))
         .child(statusMark(a.status, 13));
       const wrapped = div().px(10).py(1).child(neon(this, cx, `ag-${a.address}`, row, { on: hot, radius: 9, spread: 6, strength: a.focused ? 1 : 0.75, gloss: true, outer: 0.5 }));
-      return [wrapped, ...(folded ? [] : subs.flatMap((s) => agentRow(s, depth + 1)))];
+      return [wrapped, ...(folded ? [] : subs.flatMap((k) => subRow(k, 1, new Set([a.address, ...subs.map((x) => x.address)]))))];
     };
 
     const foot = (id, ic, label, action) => h_flex().id(id).h(28).px(14).gap(10).items_center().text_size(13)
@@ -395,14 +443,21 @@ export default class Quantum extends View {
         return line;
       }));
 
-    const out = card("q-out", "Run Output", "list", a ? div().id("q-out-open").text_size(15).text_color(C.muted).cursor_pointer()
-      .hover((x) => x.text_color("#ffffff")).on_click(() => run("pane.focus", { pane: a.pane })).child("⤢") : null).overflow_hidden()
-      .child(v_flex().gap(4).font_family("JetBrains Mono").text_size(11.5)
-        .when(!s.output?.length, (el) => el.child(div().text_color(C.dim).child("›  waiting for output…")))
-        .children((s.output ?? []).map((l, i) => h_flex().gap(8)
+    // The corner button grows Run Output over the whole column (more of the screen) and back.
+    const big = Boolean(this.outBig);
+    const lines = (big ? s.outputAll : s.output) ?? [];
+    const toggle = div().id("q-out-open").size(24).flex().items_center().justify_center().text_size(15).text_color(C.muted)
+      .cursor_pointer().hover((x) => x.text_color("#ffffff").bg("#ffffff12"))
+      .on_click((_e, cx) => { this.outBig = !big; cx.notify(); }).child(big ? "⤡" : "⤢");
+    const out = card("q-out", "Run Output", "list", toggle).overflow_hidden()
+      .child(v_flex().id("q-out-lines").flex_1().min_h(0).gap(4).font_family("JetBrains Mono").text_size(11.5)
+        .when(big, (el) => el.overflow_y_scrollbar())
+        .when(!lines.length, (el) => el.child(div().text_color(C.dim).child("›  waiting for output…")))
+        .children(lines.map((l, i) => h_flex().gap(8)
           .child(div().flex_none().text_color(C.violet).child("›"))
-          .child(div().flex_1().truncate().text_color(i === s.output.length - 1 ? "#ffffff" : C.muted).child(l.trim())))));
+          .child(div().flex_1().truncate().text_color(i === lines.length - 1 ? "#ffffff" : C.muted).child(l.trim())))));
 
+    if (big) return v_flex().size_full().child(wrap("out", out, false, true));
     return v_flex().size_full().gap(10)
       .child(wrap("run", runCard, true)).child(wrap("cmds", cmds)).child(wrap("out", out, false, true));
   }
@@ -442,33 +497,37 @@ export default class Quantum extends View {
 
 
   // ------------------------------------------------------------ bell popup
-  // Agents that need you (waiting on a question) first, then finished ones; a click goes there.
+  // Agents that need you first, then finished ones; a click goes there.
   bell(cx) {
     const all = spaces();
-    const list = agents();
     const tabOf = (a) => all.find((s) => s.id === a.space)?.tabs.find((t) => t.id === a.tab);
     const go = (a) => { closeOverlay(props()?.overlay); run("pane.focus", { pane: a.pane }); };
+    const word = { blocked: "Needs you", done: "Finished", working: "Working", idle: "Idle" };
     const row = (a) => {
       const machine = a.address.includes("/") ? a.address.split("/")[0] : "";
       const where = `${a.space_name}${a.tab_name && !/^\d+$/.test(a.tab_name) ? " · " + a.tab_name : ""}`;
-      return h_flex().id(`q-bell-${a.address}`).h(40).px(12).gap(10).items_center().cursor_pointer()
+      return h_flex().id(`q-bell-${a.address}`).h(BELL.row).flex_none().px(12).gap(10).items_center().cursor_pointer()
         .hover((x) => x.bg("#ffffff10")).on_click(() => go(a))
         .child(programIcon(a.program, 16) ?? icon("terminal", 16, C.muted))
-        .child(v_flex().flex_1().min_w(0)
+        .child(v_flex().flex_1().min_w(0).gap(1)
           .child(div().truncate().text_size(12.5).text_color(C.text).child(where))
-          .child(div().truncate().text_size(11).text_color(a.status === "blocked" ? C.amber : C.dim)
-            .child(`${a.status === "blocked" ? "Needs you" : "Finished"}${machine ? " · " + machine : ""}`)))
+          .child(div().truncate().text_size(11).text_color(a.status === "blocked" ? C.amber : a.status === "done" ? C.green : C.dim)
+            .child(`${word[a.status] ?? a.status}${machine ? " · " + machine : ""}`)))
         .child(div().flex_none().text_size(11).text_color(C.dim).child(ago(tabOf(a)?.changed_at)))
         .child(statusMark(a.status, 13));
     };
-    const items = [...list.filter((a) => a.status === "blocked"), ...list.filter((a) => a.status === "done")];
+    const label = (t) => div().h(BELL.label).flex_none().px(14).pt(8).text_size(11).text_color(C.dim).child(t);
+    const { needs, done } = bellItems(agents(), tabOf);
+    const kids = [];
+    if (needs.length) kids.push(label("Needs you"), ...needs.map(row));
+    if (done.length) kids.push(label("Finished"), ...done.map(row));
     return v_flex().id("q-bell-pop").size_full().bg("#0c1034f6").border(1).border_color("#4a58b8aa")
-      .child(h_flex().h(40).px(14).items_center().border_b(1).border_color("#4a58b866")
+      .child(h_flex().h(BELL.head).flex_none().px(14).items_center().border_b(1).border_color("#4a58b866")
         .child(div().flex_1().font_semibold().text_size(13).text_color("#ffffff").child("Notifications"))
-        .child(div().text_size(11.5).text_color(C.dim).child(items.length ? `${items.length}` : "")))
-      .child(items.length
-        ? v_flex().id("q-bell-list").flex_1().min_h(0).py(4).overflow_y_scrollbar().children(items.map(row))
-        : div().flex_1().flex().items_center().justify_center().text_size(12.5).text_color(C.muted).child("Nothing needs you right now."));
+        .when(needs.length + done.length > 0, (el) => el.child(div().text_size(11.5).text_color(C.dim).child(`${needs.length + done.length} new`))))
+      .child(kids.length
+        ? v_flex().id("q-bell-list").flex_none().h(bellHeight(agents(), tabOf) - BELL.head - 2).pb(4).overflow_y_scrollbar().children(kids)
+        : div().h(BELL.empty).flex_none().flex().items_center().justify_center().text_size(12.5).text_color(C.muted).child("No notifications"));
   }
 
   // ------------------------------------------------------------ right column switch
