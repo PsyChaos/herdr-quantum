@@ -206,17 +206,20 @@
                                                   "lone": true,
                                                   "border": {
                                                     "width": 1,
-                                                    "color": "#8b6cff66"
+                                                    "color": "#8b6cff77"
                                                   },
                                                   "focus": {
                                                     "width": 1,
-                                                    "color": "#4fd8ff"
+                                                    "color": "#c4b2ffee"
                                                   },
                                                   "header": {
                                                     "content": {
-                                                      "mod": "pane"
+                                                      "mod": "quantum",
+                                                      "props": {
+                                                        "role": "pane"
+                                                      }
                                                     },
-                                                    "height": 32,
+                                                    "height": 36,
                                                     "position": "top",
                                                     "reveal": "always"
                                                   }
@@ -282,18 +285,56 @@
         },
         {
           "id": "session",
-          "type": "block",
+          "type": "column",
           "size": {
             "px": 330
           },
           "min": 260,
           "max": 520,
-          "content": {
-            "mod": "quantum",
-            "props": {
-              "role": "session"
+          "resizable": false,
+          "children": [
+            {
+              "id": "side-tabs",
+              "type": "block",
+              "size": {
+                "px": 60
+              },
+              "content": {
+                "mod": "quantum",
+                "props": {
+                  "role": "sidetabs"
+                }
+              }
+            },
+            {
+              "id": "side-body",
+              "type": "stack",
+              "active": "side-session",
+              "children": [
+                {
+                  "id": "side-session",
+                  "type": "block",
+                  "content": {
+                    "mod": "quantum",
+                    "props": {
+                      "role": "session"
+                    }
+                  }
+                },
+                {
+                  "id": "side-tasks",
+                  "type": "block",
+                  "padding": [
+                    6,
+                    10
+                  ],
+                  "content": {
+                    "mod": "task-board"
+                  }
+                }
+              ]
             }
-          }
+          ]
         }
       ]
     },

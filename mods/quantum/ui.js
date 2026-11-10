@@ -138,11 +138,14 @@ export function programIcon(p, size, color = C.text) {
   return p.tint ? svg(p.icon).size(size).flex_none().text_color(p.color ?? color) : image(p.icon).w(size).h(size).flex_none();
 }
 
-// A gradient bar from solid segments, cyan to violet.
+// A gradient bar from solid segments, cyan to violet: only its filled part is returned
+// (as `fill`, `fw` px wide) so a caller can frame it in neon; `track` holds it.
 export function bar(pct, w, { h = 8 } = {}) {
-  const n = 30, seg = w / n, filled = Math.round((Math.max(0, Math.min(100, pct)) / 100) * n);
-  return h_flex().w(w).h(h).rounded(h / 2).overflow_hidden().bg("#ffffff14").children(
-    Array.from({ length: filled }, (_, i) => div().h_full().w(seg).flex_none().bg(mix(C.cyan, C.violet, i / (n - 1)))));
+  const n = 30, seg = w / n, filled = Math.max(1, Math.round((Math.max(0, Math.min(100, pct)) / 100) * n));
+  const fw = Math.round(filled * seg);
+  const fill = h_flex().w(fw).h(h).rounded(h / 2).overflow_hidden().children(
+    Array.from({ length: filled }, (_, i) => div().h_full().flex_1().bg(mix(C.cyan, C.violet, i / (n - 1)))));
+  return { fill, fw, track: (inner) => div().w(w).h(h).rounded(h / 2).bg("#ffffff12").child(inner) };
 }
 
 const TILES = ["#22c55e", "#f97316", "#6d7cff", "#a855f7", "#16a34a", "#ec4899", "#14b8a6", "#3b82f6", "#eab308", "#ef4444"];

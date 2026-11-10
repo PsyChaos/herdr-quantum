@@ -5,6 +5,8 @@
 //   "tabs"     the shown space's tabs as glowing pills, + Files / Changes
 //   "session"  the focused agent's run, its recent commands and output
 //   "status"   machine, branch, agents, CPU, RAM, tokens, palette
+//   "pane"     each pane's header: program, folder, status, +, Files, Changes, ⋮
+//   "sidetabs" the right column's Session / Tasks switch
 // Run details (model, effort, context, tokens) come from the agent's own screen
 // (`hc read`): a Claude Code status line like extras/claude-statusline.sh prints.
 
@@ -125,6 +127,8 @@ export default class Quantum extends View {
       case "sidebar": return this.sidebar(cx);
       case "tabs": return this.tabs(cx);
       case "status": return this.status(cx);
+      case "pane": return this.pane(cx);
+      case "sidetabs": return this.sidetabs(cx);
       default: return this.session(cx);
     }
   }
@@ -298,7 +302,7 @@ export default class Quantum extends View {
         .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "menu", kind: "popup", width: 200, props: { tab: "tab", target: { id: c.id, space: space.id } } }); })
         .child(pic)
         .child(div().max_w(170).truncate().font_medium().child(c.zoomed ? `${name} ⤢` : name))
-        .when(c.status && c.status !== "idle", (el) => el.child(statusMark(c.status, 12)))
+        .when(!c.active && c.status && c.status !== "idle", (el) => el.child(div().size(6).rounded_full().bg({ working: C.cyan, blocked: C.amber, done: C.green }[c.status])))
         .when(c.active, (el) => el.child(div().id(`q-tabx-${c.id}`).text_color(C.muted).hover((s) => s.text_color("#ffffff"))
           .on_mouse_down("left", stop).on_click((_e, cx) => { cx.stop_propagation(); run("tab.close", { id: c.id }); })
           .child(svg("mods/pane/close.svg").size(12))));
@@ -356,7 +360,10 @@ export default class Quantum extends View {
           .child(h_flex().text_size(12.5).text_color(C.muted)
             .child(div().flex_1().child(working ? `${s.doing?.verb ?? "Thinking…"}${s.effort ? ` (${s.effort} effort)` : ""}` : "Context left"))
             .child(div().text_color("#ffffff").font_semibold().child(`${s.left}%`)))
-          .child(neon(this, cx, "bar", bar(s.left, 262), { radius: 4, spread: 7, tone: "cyan", strength: working ? 1 : 0.6, pulse: working, full: false }))
+          .child((() => {
+            const b = bar(s.left, 262);
+            return b.track(div().w(b.fw).child(neon(this, cx, "bar", b.fill, { radius: 4, spread: 7, tone: "cyan", strength: working ? 0.9 : 0.6, pulse: working })));
+          })())
           .child(div().text_size(11).text_color(C.dim).child(`${s.used} of ${s.size}${s.l5 ? `  ·  limit 5h ${s.l5}% · 7d ${s.l7}%` : ""}`)))));
 
     const cmds = card("q-cmds", "Recent Commands", "terminal")
@@ -377,23 +384,59 @@ export default class Quantum extends View {
           .child(div().flex_none().text_color(C.violet).child("›"))
           .child(div().flex_1().truncate().text_color(i === s.output.length - 1 ? "#ffffff" : C.muted).child(l.trim())))));
 
-    const segBtn = (id, ic, label, on, action) => {
+    return v_flex().size_full().gap(12).overflow_y_scrollbar().pt(6).pb(6)
+      .child(wrap("run", runCard, true)).child(wrap("cmds", cmds)).child(wrap("out", out));
+  }
+
+  // ------------------------------------------------------------ pane header
+  pane(cx) {
+    const me = panes().find((p) => p.pane === props()?.pane);
+    if (!me) return div();
+    const pane = me.pane;
+    const name = ((me.program?.agent || me.program?.shell) && me.program.name) || me.title || me.program?.name || "shell";
+    const root = layout(), pnl = find(root, "panel"), body = find(root, "panel-body");
+    const btn = (id, child, action, on = false) => h_flex().id(id).h(24).px(8).gap(6).flex_none().items_center().rounded(7).text_size(12.5)
+      .bg(on ? "#2a2384dd" : "#00000000").border(1).border_color(on ? "#b9a4ffcc" : "#00000000")
+      .text_color(on ? "#ffffff" : C.muted).hover((x) => x.bg("#ffffff12").text_color(C.text))
+      .on_mouse_down("left", stop).on_click((_e, cx) => { cx.stop_propagation(); action(); }).child(child);
+    const panelBtn = (id, label, ic) => {
+      const on = pnl && !pnl.hidden && body?.active === id;
+      return btn(`q-ph-${id}-${pane}`, h_flex().gap(6).items_center().child(svg(ic).size(14)).child(label), () => {
+        if (on) run("layout.hide", { id: "panel" });
+        else { run("layout.select", { stack: "panel-body", child: id }); run("layout.show", { id: "panel" }); }
+      }, on);
+    };
+    return h_flex().id(`q-ph-${pane}`).size_full().px(12).gap(9).items_center().bg("#0d1040").border_b(1).border_color("#8b6cff44")
+      .text_size(12.5).on_click(() => run("pane.focus", { pane }))
+      .child(programIcon(me.program, 15) ?? icon("terminal", 15, C.muted))
+      .child(div().flex_none().max_w(260).truncate().font_semibold().text_color("#ffffff").child(name))
+      .child(div().flex_1().min_w(0).truncate().text_color(C.dim).child(short(me.cwd)))
+      .when(me.status === "working", (el) => el.child(svg("mods/workspace-chrome/spinner.svg").size(13).flex_none().text_color(C.cyan).spin(900)))
+      .when(me.status === "blocked", (el) => el.child(div().px(7).h(18).flex().items_center().rounded(6).bg(C.amber + "26").text_size(11).font_semibold().text_color(C.amber).child("Needs you")))
+      .when(me.status === "done", (el) => el.child(div().size(7).rounded_full().bg(C.green)))
+      .child(btn(`q-ph-split-${pane}`, h_flex().gap(5).items_center().child(div().text_size(15).child("+")), () => run("pane.split", { direction: "right", pane })))
+      .child(panelBtn("files", "Files", "mods/files/file.svg"))
+      .child(panelBtn("changes", "Changes", "mods/changes/changes.svg"))
+      .child(btn(`q-ph-menu-${pane}`, div().text_size(15).child("⋮"), () =>
+        openOverlay({ mod: "menu", kind: "popup", width: 220, props: { tab: "pane", target: { pane, terminal: me.terminal } } })));
+  }
+
+  // ------------------------------------------------------------ right column switch
+  sidetabs(cx) {
+    const active = find(layout(), "side-body")?.active ?? "side-session";
+    const seg = (id, child, ic, label) => {
+      const on = active === child;
       const el = h_flex().id(id).w_full().h(36).gap(8).justify_center().items_center().rounded(10).text_size(13)
         .when(on, (e) => e.bg("#2a2384ee").border(1).border_color("#b9a4ffee").font_semibold().text_color("#ffffff"))
         .when(!on, (e) => e.border(1).border_color("#00000000").text_color(C.muted).cursor_pointer().hover((x) => x.bg("#ffffff10").text_color(C.text)))
-        .when(Boolean(action), (e) => e.on_click(action))
+        .on_click(() => run("layout.select", { stack: "side-body", child }))
         .child(ic).child(label);
       return div().flex_1().child(neon(this, cx, id, el, { on, radius: 10, spread: 6 }));
     };
-    const toggle = (child) => () => { run("layout.select", { stack: "panel-body", child }); run("layout.toggle", { id: "panel" }); };
-    const header = h_flex().w_full().p(4).gap(4).items_center().rounded(14).bg(C.glass).border(1).border_color("#8b6cff77")
-      .child(segBtn("q-seg-session", icon("activity", 15, C.cyan), "Session", true))
-      .child(segBtn("q-seg-files", svg("mods/workspace-chrome/files.svg").size(15), "Files", false, toggle("files")))
-      .child(segBtn("q-seg-changes", svg("mods/workspace-chrome/git-compare.svg").size(15), "Changes", false, toggle("changes")));
-
-    return v_flex().size_full().gap(12).overflow_y_scrollbar().pb(6)
-      .child(div().px(10).pt(10).child(neon(this, cx, "seg", header, { radius: 14, spread: 10, strength: 0.8 })))
-      .child(wrap("run", runCard, true)).child(wrap("cmds", cmds)).child(wrap("out", out));
+    const header = h_flex().w_full().p(4).gap(4).items_center().rounded(14).bg(C.glass).border(1).border_color("#8b6cff55")
+      .child(seg("q-seg-session", "side-session", icon("activity", 15, C.cyan), "Session"))
+      .child(seg("q-seg-tasks", "side-tasks", icon("list", 15, C.lilac), "Tasks"));
+    return div().size_full().px(10).pt(10).child(neon(this, cx, "seg", header, { radius: 14, spread: 10, strength: 0.8 }));
   }
 
   // ------------------------------------------------------------ status bar

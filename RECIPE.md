@@ -49,11 +49,15 @@ live Session panel side by side; then a status bar.
   - Glass `#0b0e30b0`, radius 16, a `#9b7bff66` border and three faint outer rings.
   - **Tab bar (44px):** a grid button (picker), the tabs as 32px pills, then +. The active tab
     is a violet glass pill in a neon frame. Files and Changes live only in the Session header.
-  - **Panes:** cards with radius 12 and a `#8b6cff66` border; the focused pane's border is cyan.
-    Each has Herdr's `pane` header.
+  - **Panes:** cards with radius 12 and a `#8b6cff77` border; the focused pane's border is lilac
+    `#c4b2ffee`.
+  - **Pane header (36px, `role: "pane"`):** the program icon and name, the folder in dim text,
+    the status, then `+` (split right), Files, Changes and `⋮` (the pane menu). Files and
+    Changes appear only here.
   - **Terminals:** opacity 0.86 over `#090b26`.
-- **Session panel (330px):**
-  - **Header:** a segmented control (Session, Files, Changes).
+- **Right column (330px):**
+  - **Header (`role: "sidetabs"`):** a segmented control, Session and Tasks. It switches the
+    `side-body` stack between this mod's session panel and Herdr's `task-board`.
   - **Cards:** Current Run, Recent Commands and Run Output, each an edge-lit card.
 - **Status bar (44px):** machine, branch, agent count with a glowing dot, CPU, RAM, ↑↓ tokens,
   and "commands".
@@ -80,7 +84,8 @@ live Session panel side by side; then a status bar.
   - An agent row focuses its pane.
   - A tab selects; double-click renames; right-click opens the tab menu.
   - Scrolling over the tab bar steps through the tabs.
-  - Files and Changes toggle the side panel.
+  - Files and Changes in the pane header toggle the side panel; Session and Tasks switch the
+    right column.
   - Search and "commands" open the palette.
 - **Refresh:** the session panel every 2.5s, the status bar every 3s, and the sidebar's
   "4m" labels every 30s. Spinners and breathing use native `.frames` and `.loop`, never a
@@ -100,8 +105,8 @@ live Session panel side by side; then a status bar.
   - Root settings: `titlebar: "none"`, `theme: "quantum"` plus `colors` overrides,
     `terminal_opacity: 0.86`, and the background image.
 - **Mod:** `mods/quantum`.
-  - `main.js` holds the five roles. `ui.js` holds the palette, `neon` (a framed element), `panel`, `bar`, `halo`, letter tiles, status marks and `ago`.
-- **Shipped mods used:** `pane` (pane headers), `files`, `changes`; `new-menu`, `menu`, `picker`
+  - `main.js` holds the seven roles: top, sidebar, tabs, pane, sidetabs, session, status. `ui.js` holds the palette, `neon` (a framed element), `panel`, `bar`, `halo`, letter tiles, status marks and `ago`.
+- **Shipped mods used:** `files`, `changes`, `task-board`; `new-menu`, `menu`, `picker`
   and `machine-add` as overlays. Some icons come from `mods/workspace-chrome`, `mods/pane`,
   `mods/files` and `mods/changes`.
 - **`herdr` API used:**
@@ -156,6 +161,7 @@ live Session panel side by side; then a status bar.
   bar with its percent.
 - A working agent shows a cyan spinner and a breathing rim in the sidebar, in Recent Commands
   and on the Running pill.
-- Clicking a space row switches spaces. The search field opens the palette. Files in the session
-  header opens the Files panel beside the panes, and a second click closes it.
+- Clicking a space row switches spaces. The search field opens the palette. Files in a pane
+  header opens the Files panel beside the panes, and a second click closes it. Tasks shows the
+  task board in the right column.
 - CPU and RAM appear in the status bar on Linux within 6s.
