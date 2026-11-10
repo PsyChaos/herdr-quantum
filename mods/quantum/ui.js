@@ -45,7 +45,7 @@ const TONES = {
 };
 const made = new Map(); // file name -> "pending" | "ready"
 
-function frameSvg(w, h, { radius, tone, spread, strength }) {
+function frameSvg(w, h, { radius, tone, spread, strength, gloss = false, fill = false }) {
   const [hot, mid, low, glint] = TONES[tone] ?? TONES.violet;
   const W = w + 2 * spread, H = h + 2 * spread, s = spread, r = Math.min(radius, w / 2, h / 2);
   const k = (x) => Math.min(1, x * strength).toFixed(3);
@@ -61,6 +61,13 @@ function frameSvg(w, h, { radius, tone, spread, strength }) {
     + rect(spread * 0.28, `filter="url(#wide)" opacity="0.32"`)
     + rect(1.6, `filter="url(#near)" opacity="0.55"`)
     + rect(1, "")
+    + (fill ? `<linearGradient id="fb" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${hot}" stop-opacity="0.10"/><stop offset="0.5" stop-color="${low}" stop-opacity="0.04"/><stop offset="1" stop-color="${glint}" stop-opacity="0.12"/></linearGradient>`
+        + `<rect x="${s}" y="${s}" width="${w}" height="${h}" rx="${r}" fill="url(#fb)"/>` : "")
+    + (gloss ? `<linearGradient id="gl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/><stop offset="0.45" stop-color="#ffffff" stop-opacity="0.06"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient>`
+        + `<filter id="ig" x="0" y="0" width="${W}" height="${H}" filterUnits="userSpaceOnUse"><feGaussianBlur stdDeviation="2.5"/></filter>`
+        + `<clipPath id="cl"><rect x="${s}" y="${s}" width="${w}" height="${h}" rx="${r}"/></clipPath>`
+        + `<rect x="${s + 1}" y="${s + 1}" width="${w - 2}" height="${h * 0.55}" rx="${Math.max(1, r - 1)}" fill="url(#gl)"/>`
+        + `<rect x="${s}" y="${s}" width="${w}" height="${h}" rx="${r}" fill="none" stroke="${mid}" stroke-width="5" stroke-opacity="0.45" filter="url(#ig)" clip-path="url(#cl)"/>` : "")
     + `</svg>`;
 }
 
@@ -133,17 +140,17 @@ function framePic(cx, size, opts) {
   if (!size) return null;
   const w = Math.round(size.width), h = Math.round(size.height);
   if (w < 4 || h < 4) return null;
-  const { radius, tone, spread, strength } = opts;
-  const name = `v2-${tone}-${radius}-${spread}-${Math.round(strength * 100)}-${w}x${h}.svg`;
-  const rel = ensurePic(cx, name, () => frameSvg(w, h, { radius, tone, spread, strength }));
+  const { radius, tone, spread, strength, gloss = false, fill = false } = opts;
+  const name = `v3-${tone}-${radius}-${spread}-${Math.round(strength * 100)}-${gloss ? "g" : ""}${fill ? "f" : ""}-${w}x${h}.svg`;
+  const rel = ensurePic(cx, name, () => frameSvg(w, h, { radius, tone, spread, strength, gloss, fill }));
   if (rel) return image(rel).absolute().left(-spread).top(-spread).w(w + 2 * spread).h(h + 2 * spread);
   return null;
 }
 
 // `el` (rounded `radius`) with a neon frame when `on`. `view.sizes` keeps measured sizes;
 // `key` must be unique in the mod copy.
-export function neon(view, cx, key, el, { on = true, radius = 12, tone = "violet", spread = 10, strength = 1, pulse = false, full = true } = {}) {
-  const box = div().id(`nz-${key}`).relative().when(full, (d) => d.w_full())
+export function neon(view, cx, key, el, { on = true, radius = 12, tone = "violet", spread = 10, strength = 1, pulse = false, full = true, gloss = false, fill = false, tall = false } = {}) {
+  const box = div().id(`nz-${key}`).relative().when(full, (d) => d.w_full()).when(tall, (d) => d.h_full())
     .on_size_change((size, cx) => {
       const old = view.sizes[key];
       if (!old || Math.round(old.width) !== Math.round(size.width) || Math.round(old.height) !== Math.round(size.height)) {
@@ -152,7 +159,7 @@ export function neon(view, cx, key, el, { on = true, radius = 12, tone = "violet
     })
     .child(el);
   if (!on) return box;
-  const pic = framePic(cx, view.sizes[key], { radius, tone, spread, strength });
+  const pic = framePic(cx, view.sizes[key], { radius, tone, spread, strength, gloss, fill });
   return pic ? box.child(pulse ? pic.loop("opacity", { from: 0.55, to: 1, period: 1800 }) : pic) : box;
 }
 
