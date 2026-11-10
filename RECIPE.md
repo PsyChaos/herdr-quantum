@@ -46,7 +46,6 @@ live Session panel side by side; then a status bar.
   - **Sub-agents:** nested under their parent with "└". Clicking the parent's icon folds them.
   - **Footer:** Settings and Add machine.
 - **Work area:**
-  - Glass `#0b0e30b0`, radius 16, a `#9b7bff66` border and three faint outer rings.
   - **Tab bar (44px):** a grid button (picker), the tabs as 32px pills, then +. The active tab
     is a violet glass pill in a neon frame. Files and Changes live only in the Session header.
   - **Panes:** cards with radius 12 and a `#8b6cff77` border; the focused pane's border is lilac
@@ -146,8 +145,17 @@ live Session panel side by side; then a status bar.
   translucency goes in the layout's `colors` as `#rrggbbaa`.
 - **Image cache:** the app caches images by path. Rename a picture (as `nebula.jpg` became
   `space.jpg`) to see a new version at once.
-- **Layout borders:** the work area's border comes from the layout, so it can't carry a neon
-  picture. It gets a plain line and faint rings.
+- **The card's neon is drawn in pieces.** Only the root node draws a background picture,
+  so a node's `background.image` can't carry the card's frame. Raster images are also needed
+  there, not SVG. So:
+  - one SVG of the whole card is drawn piecewise;
+  - the tab bar draws its top part (absolute, behind the tabs);
+  - three 12px `edge` blocks (`role: "edge"`, `side: left | right | bottom`) draw their
+    slices, offset by the card size;
+  - the tab bar measures the width, the sidebar the body height, and both share them
+    (`quantum.bodyH`, `quantum.card`).
+- **Square corners:** pane backgrounds are drawn square even with a radius, so the neon line
+  runs 4px outside the panes, letting its rounded corners clear the square ones.
 - **Meters:** CPU needs two samples (it appears on the second refresh). CPU and RAM are Linux
   only and measure the machine the window runs on.
 - **Parsing:** it expects Claude Code's look (`●` tool calls, `─────` lines around the prompt).

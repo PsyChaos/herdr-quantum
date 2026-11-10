@@ -64,6 +64,68 @@ function frameSvg(w, h, { radius, tone, spread, strength }) {
     + `</svg>`;
 }
 
+// Writes `svg` (a string) to mods/quantum/.glow/<name> once; returns its path when it's there.
+export function ensurePic(cx, name, make) {
+  const rel = `${A}/.glow/${name}`;
+  const state = made.get(name);
+  if (state === "ready") return rel;
+  if (!state) {
+    made.set(name, "pending");
+    cx.spawn(async (cx) => {
+      try {
+        const dir = `${appHome()}/${A}/.glow`;
+        if (!(await fs.exists(`${dir}/${name}`))) {
+          await fs.mkdir(dir, { recursive: true });
+          await fs.writeFile(`${dir}/${name}`, make());
+        }
+        made.set(name, "ready");
+        cx.notify();
+      } catch (_) { made.delete(name); }
+    });
+  }
+  return null;
+}
+
+// The terminal card's neon, for a card W×H (in card coordinates; the panes fill it but for
+// the 12px edge strips on its sides and bottom). The picture is W wide and H + spread tall:
+// `spread` px above the card for the light over its top edge. The line runs 4px outside the
+// panes, so its rounded corners clear their square ones: cyan at the top-left, dim violet
+// along the top, bright violet-pink along the bottom.
+export function cardSvg(W, H, { radius = 12, spread = 12 } = {}) {
+  const s = spread, PH = H + s, gap = 4;
+  const x0 = 12 - gap - 0.5, yTop = s - gap + 0.5, yBot = s + H - 12 + gap - 0.5;
+  const w = W - 2 * x0, h = yBot - yTop;
+  const blur = (id, sd) => `<filter id="${id}" filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${PH}"><feGaussianBlur stdDeviation="${sd}"/></filter>`;
+  const grad = `<linearGradient id="g" gradientUnits="userSpaceOnUse" x1="${x0}" y1="${yTop}" x2="${x0 + w * 0.3}" y2="${yBot}">`
+    + `<stop offset="0" stop-color="#7cf0ff" stop-opacity="1"/><stop offset="0.25" stop-color="#a48bff" stop-opacity="0.7"/>`
+    + `<stop offset="0.65" stop-color="#9b7bff" stop-opacity="0.8"/><stop offset="1" stop-color="#e58bff" stop-opacity="1"/></linearGradient>`;
+  const rect = (sw, extra) => `<rect x="${x0}" y="${yTop}" width="${w}" height="${h}" rx="${radius}" fill="none" stroke="url(#g)" stroke-width="${sw}" ${extra}/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${PH}" viewBox="0 0 ${W} ${PH}"><defs>${grad}${blur("w", 3.5)}${blur("n", 1.4)}</defs>`
+    + rect(6, `filter="url(#w)" opacity="0.6"`) + rect(2.6, `filter="url(#n)" opacity="0.85"`) + rect(1.4, "") + `</svg>`;
+}
+
+// A context bar as a picture: a rounded track, a rounded cyan → blue → violet → pink fill,
+// a soft glow under the fill and a bright cap at its end.
+export function barSvg(w, h, pct, lit) {
+  const s = 8, W = w + 2 * s, H = h + 2 * s, fw = Math.max(h, Math.round((w * Math.max(0, Math.min(100, pct))) / 100));
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>`
+    + `<linearGradient id="f" gradientUnits="userSpaceOnUse" x1="${s}" y1="0" x2="${s + fw}" y2="0"><stop offset="0" stop-color="#2ff0d0"/><stop offset="0.45" stop-color="#3b8bff"/><stop offset="0.8" stop-color="#8b6cff"/><stop offset="1" stop-color="#d47bff"/></linearGradient>`
+    + `<filter id="b" filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><feGaussianBlur stdDeviation="3"/></filter></defs>`
+    + `<rect x="${s}" y="${s}" width="${w}" height="${h}" rx="${h / 2}" fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-opacity="0.06"/>`
+    + `<rect x="${s}" y="${s}" width="${fw}" height="${h}" rx="${h / 2}" fill="url(#f)" filter="url(#b)" opacity="${lit ? 0.75 : 0.45}"/>`
+    + `<rect x="${s}" y="${s}" width="${fw}" height="${h}" rx="${h / 2}" fill="url(#f)"/>`
+    + `<rect x="${s}" y="${s + 1}" width="${fw}" height="${h / 2 - 1}" rx="${h / 4}" fill="#ffffff" opacity="0.18"/>`
+    + `<circle cx="${s + fw - h / 2}" cy="${s + h / 2}" r="${h * 0.7}" fill="#ffffff" opacity="${lit ? 0.7 : 0.45}" filter="url(#b)"/>`
+    + `<circle cx="${s + fw - h / 2}" cy="${s + h / 2}" r="${h * 0.22}" fill="#ffffff" opacity="0.9"/></svg>`;
+}
+
+export function barPic(cx, w, h, pct, lit) {
+  const p = Math.round(pct);
+  const rel = ensurePic(cx, `v3-bar-${w}x${h}-${p}-${lit ? 1 : 0}.svg`, () => barSvg(w, h, p, lit));
+  const box = div().relative().w(w).h(h);
+  return rel ? box.child(image(rel).absolute().left(-8).top(-8).w(w + 16).h(h + 16)) : box.rounded(h / 2).bg("#ffffff14");
+}
+
 // The frame picture for an element of `size`, positioned over it (the parent must be
 // `.relative()`); null until it has been written.
 function framePic(cx, size, opts) {
@@ -72,23 +134,8 @@ function framePic(cx, size, opts) {
   if (w < 4 || h < 4) return null;
   const { radius, tone, spread, strength } = opts;
   const name = `v2-${tone}-${radius}-${spread}-${Math.round(strength * 100)}-${w}x${h}.svg`;
-  const rel = `${A}/.glow/${name}`;
-  const state = made.get(name);
-  if (state === "ready") return image(rel).absolute().left(-spread).top(-spread).w(w + 2 * spread).h(h + 2 * spread);
-  if (!state) {
-    made.set(name, "pending");
-    cx.spawn(async (cx) => {
-      try {
-        const dir = `${appHome()}/${A}/.glow`;
-        if (!(await fs.exists(`${dir}/${name}`))) {
-          await fs.mkdir(dir, { recursive: true });
-          await fs.writeFile(`${dir}/${name}`, frameSvg(w, h, { radius, tone, spread, strength }));
-        }
-        made.set(name, "ready");
-        cx.notify();
-      } catch (_) { made.delete(name); }
-    });
-  }
+  const rel = ensurePic(cx, name, () => frameSvg(w, h, { radius, tone, spread, strength }));
+  if (rel) return image(rel).absolute().left(-spread).top(-spread).w(w + 2 * spread).h(h + 2 * spread);
   return null;
 }
 

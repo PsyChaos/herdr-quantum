@@ -12,7 +12,7 @@
     "canvas": "#00000000",
     "chrome": "#0c0f34b8",
     "surface": "#11154299",
-    "background": "#090b26",
+    "background": "#0e1236",
     "border": "#5d63d855",
     "input": "#8b6cffaa",
     "hover": "#ffffff12",
@@ -73,211 +73,157 @@
           }
         },
         {
-          "id": "work-frame",
+          "id": "work",
           "type": "column",
-          "padding": [
-            4,
-            4
-          ],
+          "resizable": false,
           "size": {
             "weight": 1
           },
-          "resizable": false,
           "children": [
             {
-              "id": "work-glow6",
-              "type": "column",
-              "radius": 22,
-              "padding": 0,
-              "border": {
-                "width": 1,
-                "color": "#8164ff03"
-              },
+              "id": "tabs",
+              "type": "block",
               "size": {
-                "weight": 1
+                "px": 40
               },
+              "window_drag": true,
+              "content": {
+                "mod": "quantum",
+                "props": {
+                  "role": "tabs"
+                }
+              }
+            },
+            {
+              "id": "card",
+              "type": "column",
+              "padding": 0,
               "resizable": false,
               "children": [
                 {
-                  "id": "work-glow5",
-                  "type": "column",
-                  "radius": 21,
-                  "padding": 0,
-                  "border": {
-                    "width": 1,
-                    "color": "#886cff09"
-                  },
-                  "size": {
-                    "weight": 1
-                  },
+                  "id": "card-mid",
+                  "type": "row",
                   "resizable": false,
                   "children": [
                     {
-                      "id": "work-glow4",
-                      "type": "column",
-                      "radius": 20,
-                      "padding": 0,
-                      "border": {
-                        "width": 1,
-                        "color": "#9074ff13"
-                      },
+                      "id": "edge-left",
+                      "type": "block",
                       "size": {
-                        "weight": 1
+                        "px": 12
                       },
                       "resizable": false,
+                      "content": {
+                        "mod": "quantum",
+                        "props": {
+                          "role": "edge",
+                          "side": "left"
+                        }
+                      }
+                    },
+                    {
+                      "id": "work-body",
+                      "type": "row",
+                      "padding": 0,
+                      "gap": 8,
                       "children": [
                         {
-                          "id": "work-glow3",
-                          "type": "column",
-                          "radius": 19,
-                          "padding": 0,
-                          "border": {
-                            "width": 1,
-                            "color": "#977cff21"
-                          },
-                          "size": {
-                            "weight": 1
-                          },
-                          "resizable": false,
-                          "children": [
-                            {
-                              "id": "work-glow2",
-                              "type": "column",
-                              "radius": 18,
-                              "padding": 0,
+                          "id": "main",
+                          "type": "block",
+                          "content": {
+                            "tab": "active",
+                            "pane": {
+                              "gap": 8,
+                              "radius": 8,
+                              "background": "background",
+                              "lone": true,
                               "border": {
                                 "width": 1,
-                                "color": "#9e84ff2e"
+                                "color": "#8b6cff00"
                               },
-                              "size": {
-                                "weight": 1
+                              "focus": {
+                                "width": 1,
+                                "color": "#c4b2ff55"
                               },
-                              "resizable": false,
+                              "header": {
+                                "content": {
+                                  "mod": "quantum",
+                                  "props": {
+                                    "role": "pane"
+                                  }
+                                },
+                                "height": 38,
+                                "position": "top",
+                                "reveal": "always"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "id": "panel",
+                          "type": "column",
+                          "hidden": true,
+                          "size": {
+                            "px": 368
+                          },
+                          "min": 280,
+                          "max": 900,
+                          "children": [
+                            {
+                              "id": "panel-body",
+                              "type": "stack",
+                              "active": "files",
                               "children": [
                                 {
-                                  "id": "work-glow1",
-                                  "type": "column",
-                                  "radius": 17,
-                                  "padding": 0,
-                                  "border": {
-                                    "width": 1,
-                                    "color": "#a58cff33"
-                                  },
-                                  "size": {
-                                    "weight": 1
-                                  },
-                                  "resizable": false,
-                                  "children": [
-                                    {
-                                      "id": "work",
-                                      "type": "column",
-                                      "padding": 0,
-                                      "resizable": false,
-                                      "children": [
-                                        {
-                                          "id": "tabs",
-                                          "type": "block",
-                                          "size": {
-                                            "px": 44
-                                          },
-                                          "window_drag": true,
-                                          "content": {
-                                            "mod": "quantum",
-                                            "props": {
-                                              "role": "tabs"
-                                            }
-                                          }
-                                        },
-                                        {
-                                          "id": "work-body",
-                                          "type": "row",
-                                          "padding": 8,
-                                          "gap": 8,
-                                          "children": [
-                                            {
-                                              "id": "main",
-                                              "type": "block",
-                                              "content": {
-                                                "tab": "active",
-                                                "pane": {
-                                                  "gap": 8,
-                                                  "radius": 12,
-                                                  "background": "background",
-                                                  "lone": true,
-                                                  "border": {
-                                                    "width": 1,
-                                                    "color": "#8b6cff77"
-                                                  },
-                                                  "focus": {
-                                                    "width": 1,
-                                                    "color": "#c4b2ffee"
-                                                  },
-                                                  "header": {
-                                                    "content": {
-                                                      "mod": "quantum",
-                                                      "props": {
-                                                        "role": "pane"
-                                                      }
-                                                    },
-                                                    "height": 36,
-                                                    "position": "top",
-                                                    "reveal": "always"
-                                                  }
-                                                }
-                                              }
-                                            },
-                                            {
-                                              "id": "panel",
-                                              "type": "column",
-                                              "hidden": true,
-                                              "size": {
-                                                "px": 368
-                                              },
-                                              "min": 280,
-                                              "max": 900,
-                                              "children": [
-                                                {
-                                                  "id": "panel-body",
-                                                  "type": "stack",
-                                                  "active": "files",
-                                                  "children": [
-                                                    {
-                                                      "id": "files",
-                                                      "type": "block",
-                                                      "content": {
-                                                        "mod": "files"
-                                                      }
-                                                    },
-                                                    {
-                                                      "id": "changes",
-                                                      "type": "block",
-                                                      "content": {
-                                                        "mod": "changes"
-                                                      }
-                                                    }
-                                                  ]
-                                                }
-                                              ]
-                                            }
-                                          ]
-                                        }
-                                      ],
-                                      "background": "#0b0e30b0",
-                                      "radius": 16,
-                                      "border": {
-                                        "width": 1,
-                                        "color": "#b9a4ffcc"
-                                      }
-                                    }
-                                  ]
+                                  "id": "files",
+                                  "type": "block",
+                                  "content": {
+                                    "mod": "files"
+                                  }
+                                },
+                                {
+                                  "id": "changes",
+                                  "type": "block",
+                                  "content": {
+                                    "mod": "changes"
+                                  }
                                 }
                               ]
                             }
                           ]
                         }
                       ]
+                    },
+                    {
+                      "id": "edge-right",
+                      "type": "block",
+                      "size": {
+                        "px": 12
+                      },
+                      "resizable": false,
+                      "content": {
+                        "mod": "quantum",
+                        "props": {
+                          "role": "edge",
+                          "side": "right"
+                        }
+                      }
                     }
                   ]
+                },
+                {
+                  "id": "edge-bottom",
+                  "type": "block",
+                  "size": {
+                    "px": 12
+                  },
+                  "resizable": false,
+                  "content": {
+                    "mod": "quantum",
+                    "props": {
+                      "role": "edge",
+                      "side": "bottom"
+                    }
+                  }
                 }
               ]
             }

@@ -13,10 +13,10 @@
 import { View, div, svg, image } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
 import {
-  agents, spaces, panes, focused, terminals, machines, layout, shared,
-  run, props, hc, readTextFile, keys, window, home, openOverlay,
+  agents, spaces, panes, focused, terminals, machines, layout, shared, setShared,
+  run, props, hc, exec, readTextFile, keys, window, home, appHome, openOverlay,
 } from "herdr";
-import { A, C, SPIN, neon, panel, halo, icon, programIcon, bar, letterTile, statusMark, ago } from "./ui.js";
+import { A, C, SPIN, neon, panel, barPic, ensurePic, cardSvg, halo, icon, programIcon, bar, letterTile, statusMark, ago } from "./ui.js";
 
 const stop = (_e, cx) => cx.stop_propagation();
 
@@ -129,6 +129,7 @@ export default class Quantum extends View {
       case "status": return this.status(cx);
       case "pane": return this.pane(cx);
       case "sidetabs": return this.sidetabs(cx);
+      case "edge": return this.edge(cx);
       default: return this.session(cx);
     }
   }
@@ -280,6 +281,8 @@ export default class Quantum extends View {
       .child(div().mx(14).my(6).h(1).bg("#8b6cff33"))
       .child(foot("q-settings2", "settings", "Settings", () => run("app.settings")))
       .child(foot("q-add-machine", "plus", "Add machine", () => run("mod.open", { name: "machine-add" })));
+    const bh = this.sizes.sidebar ? Math.round(this.sizes.sidebar.height) + 20 : null;
+    if (bh && shared("quantum.bodyH") !== bh) cx.spawn(async () => setShared("quantum.bodyH", bh));
     return panel(this, cx, "sidebar", content, { id: "q-sidebar" });
   }
 
@@ -288,36 +291,71 @@ export default class Quantum extends View {
     const space = spaces().find((p) => p.active);
     const shown = space?.tabs ?? [];
     const all = panes();
+    const cardTop = this.syncCard(cx);
+    const shape = (el, on) => el.h(34).px(12).gap(8).items_center().flex_none().rounded_t(10).text_size(13)
+      .bg(on ? "#2a2384f0" : "#12164acc").border_t(1).border_l(1).border_r(1).border_color(on ? "#c4b2ffee" : "#8b6cff44")
+      .text_color(on ? "#ffffff" : C.muted);
     const pill = (c) => {
       const program = all.find((p) => p.tab === c.id && p.program?.agent)?.program ?? all.find((p) => p.tab === c.id)?.program;
       const auto = /^\d+$/.test(c.name) || /^tb\d+$/.test(c.name);
-      const name = auto && program?.agent ? program.name : c.name;
-      const pic = program?.agent ? programIcon(program, 15) : icon("terminal", 15, c.active ? C.text : C.muted);
-      const el = h_flex().id(`q-tab-${c.id}`).h(32).px(12).gap(8).items_center().rounded(10).flex_none().text_size(13)
-        .bg(c.active ? "#2a2384dd" : "#ffffff08").border(1).border_color(c.active ? "#b9a4ffee" : "#ffffff14")
-        .text_color(c.active ? "#ffffff" : C.muted).cursor_pointer()
-        .hover((s) => s.bg(c.active ? "#2a2384dd" : "#ffffff14").text_color(C.text))
+      const agent = Boolean(program?.agent);
+      const name = auto ? (agent ? program.name : String(c.index)) : c.name;
+      const pic = agent ? programIcon(program, 15) : program?.shell ? icon("terminal", 15, c.active ? "#ffffff" : C.muted) : null;
+      const el = shape(h_flex().id(`q-tab-${c.id}`).cursor_pointer(), c.active)
+        .hover((x) => x.text_color(C.text))
         .on_mouse_down("left", (e, cx) => { cx.stop_propagation(); if (e.click_count === 2) run("tab.rename", { id: c.id }); })
         .on_click(() => run("tab.select", { id: c.id }))
         .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "menu", kind: "popup", width: 200, props: { tab: "tab", target: { id: c.id, space: space.id } } }); })
-        .child(pic)
+        .when(Boolean(pic), (el) => el.child(pic))
         .child(div().max_w(170).truncate().font_medium().child(c.zoomed ? `${name} ⤢` : name))
         .when(!c.active && c.status && c.status !== "idle", (el) => el.child(div().size(6).rounded_full().bg({ working: C.cyan, blocked: C.amber, done: C.green }[c.status])))
-        .when(c.active, (el) => el.child(div().id(`q-tabx-${c.id}`).text_color(C.muted).hover((s) => s.text_color("#ffffff"))
+        .when(c.active, (el) => el.child(div().id(`q-tabx-${c.id}`).text_color(C.muted).hover((x) => x.text_color("#ffffff"))
           .on_mouse_down("left", stop).on_click((_e, cx) => { cx.stop_propagation(); run("tab.close", { id: c.id }); })
           .child(svg("mods/pane/close.svg").size(12))));
-      return div().flex_none().mx(2).child(neon(this, cx, `tab-${c.id}`, el, { on: c.active, radius: 10, spread: 8, full: false }));
+      return div().flex_none().child(neon(this, cx, `tab-${c.id}`, el, { on: c.active, radius: 10, spread: 6, strength: 0.9, full: false }));
     };
-    return h_flex().relative().size_full().min_w(0).px(10).gap(4).items_center()
+    return h_flex().id("q-tabs").relative().size_full().min_w(0).px(18).gap(6).items_end()
+      .on_size_change((size, cx) => {
+        if (Math.round(size.width) !== Math.round(this.tabsW ?? 0) || Math.round(size.height) !== Math.round(this.tabsH ?? 0)) {
+          this.tabsW = size.width; this.tabsH = size.height; cx.notify();
+        }
+      })
+      .when(Boolean(cardTop), (el) => el.child(cardTop))
       .on_scroll_wheel((e) => { if (Math.abs(e.delta.y) >= 1) run(e.delta.y > 0 ? "tab.prev" : "tab.next"); })
-      .child(div().id("q-grid").size(32).flex_none().flex().items_center().justify_center().rounded(9).border(1).border_color("#ffffff14")
-        .text_color(C.muted).hover((s) => s.bg("#ffffff12").text_color(C.text)).on_mouse_down("left", stop)
-        .on_click(() => run("mod.open", { name: "picker" })).child(icon("grid", 15, C.muted)))
-      .child(h_flex().id("q-tab-scroll").flex_1().min_w(0).h_full().items_center().gap(2).overflow_x_scrollbar().children(shown.map(pill)))
-      .child(div().id("q-tab-new").size(30).flex_none().flex().items_center().justify_center().rounded(9).text_size(17).text_color(C.muted)
-        .hover((s) => s.bg("#ffffff12").text_color(C.text)).on_mouse_down("left", stop)
+      .child(shape(h_flex().id("q-grid").cursor_pointer().hover((x) => x.text_color(C.text)), false).px(10)
+        .on_mouse_down("left", stop).on_click(() => run("mod.open", { name: "picker" })).child(icon("grid", 15, C.muted)))
+      .child(h_flex().id("q-tab-scroll").min_w(0).h_full().items_end().gap(6).overflow_x_scrollbar().children(shown.map(pill)))
+      .child(div().id("q-tab-new").mb(4).size(28).flex_none().flex().items_center().justify_center().rounded(8).text_size(17).text_color(C.muted)
+        .hover((x) => x.bg("#ffffff12").text_color(C.text)).on_mouse_down("left", stop)
         .on_click(() => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })).child("+"))
-;
+      .child(div().flex_1());
+  }
+
+  // The terminal card's neon is one picture of the whole card (ui.js cardSvg), drawn in
+  // pieces: its top here, under the tabs; its sides and bottom by the 12px "edge" blocks
+  // round the card. Layout backgrounds can't show it (only the root's picture is drawn),
+  // so the pieces line it up from the card size shared here.
+  syncCard(cx) {
+    const W = Math.round(this.tabsW ?? 0), T = Math.round(this.tabsH ?? 40), bodyH = shared("quantum.bodyH");
+    if (!W || !bodyH) return null;
+    const H = bodyH - T, SP = 12;
+    const rel = ensurePic(cx, `v5-card-${W}x${H}.svg`, () => cardSvg(W, H, { radius: 12, spread: SP }));
+    if (!rel) return null;
+    const cur = shared("quantum.card");
+    if (!cur || cur.rel !== rel) cx.spawn(async () => setShared("quantum.card", { W, H, SP, rel }));
+    return image(rel).absolute().left(0).top(T - SP).w(W).h(H + SP);
+  }
+
+  // ------------------------------------------------------------ card edges
+  edge(cx) {
+    const c = shared("quantum.card");
+    const side = props()?.side;
+    const box = div().relative().size_full().overflow_hidden();
+    if (!c) return box;
+    const pic = image(c.rel).absolute().w(c.W).h(c.H + c.SP);
+    if (side === "left") return box.child(pic.left(0).top(-c.SP));
+    if (side === "right") return box.child(pic.left(-(c.W - 12)).top(-c.SP));
+    return box.child(pic.left(0).top(-(c.H - 12) - c.SP));
   }
 
   // ------------------------------------------------------------ session
@@ -360,10 +398,7 @@ export default class Quantum extends View {
           .child(h_flex().text_size(12.5).text_color(C.muted)
             .child(div().flex_1().child(working ? `${s.doing?.verb ?? "Thinking…"}${s.effort ? ` (${s.effort} effort)` : ""}` : "Context left"))
             .child(div().text_color("#ffffff").font_semibold().child(`${s.left}%`)))
-          .child((() => {
-            const b = bar(s.left, 262);
-            return b.track(div().w(b.fw).child(neon(this, cx, "bar", b.fill, { radius: 4, spread: 7, tone: "cyan", strength: working ? 0.9 : 0.6, pulse: working })));
-          })())
+          .child(barPic(cx, 262, 10, s.left, working))
           .child(div().text_size(11).text_color(C.dim).child(`${s.used} of ${s.size}${s.l5 ? `  ·  limit 5h ${s.l5}% · 7d ${s.l7}%` : ""}`)))));
 
     const cmds = card("q-cmds", "Recent Commands", "terminal")
