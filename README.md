@@ -24,11 +24,34 @@ herdr-app do layout.switch '{"name":"quantum"}'
 
 `ctrl-shift-l` switches back to your own layout.
 
+## Tasks tab (optional)
+
+The right column gets a **Tasks** tab when the [task-board](https://github.com/PsyChaos/herdr-mods/tree/main/task-board)
+mod is installed: it lists the tasks your agents hand out to sub-agents (`hc run`), grouped under
+the agent that started them. Without it Quantum shows only the Session panel.
+
+Ask your agent in Herdr to add it:
+
+> add the mod github.com/PsyChaos/herdr-mods/tree/main/task-board
+
+Or copy it by hand:
+
+```sh
+git clone https://github.com/PsyChaos/herdr-mods
+cp -r herdr-mods/task-board ~/.config/herdr-app/mods/
+```
+
+Quantum finds it within 30 seconds and adds the tab. It then writes `task-board` into
+`layouts/quantum.json`; if you remove task-board later, put that layout back from this repo too,
+or Herdr won't open it.
+
 ## What it reads
 
-- **Agent screens:** it runs `hc read` on the agent it shows, to find the model, effort, context
+- **Agent screens:** it runs `hc read` (the visible screen only) on the agent it shows, to find the model, effort, context
   and token counts in Claude Code's status line, plus its recent shell commands and output.
 - **System files:** it reads `/proc/stat` and `/proc/meminfo` for the CPU and RAM meters.
+- **Layout:** when task-board is installed it runs `herdr-app do layout.set` to point the Tasks
+  block at it (once; again only if the block is put back).
 - **Network:** it makes no network requests.
 
 To get the model, context and token details, use a Claude Code status line like

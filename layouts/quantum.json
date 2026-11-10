@@ -217,7 +217,10 @@
                   "id": "side-tasks",
                   "type": "block",
                   "content": {
-                    "mod": "task-board"
+                    "mod": "quantum",
+                    "props": {
+                      "role": "tasks"
+                    }
                   },
                   "background": "#0b1236b8",
                   "border": {
