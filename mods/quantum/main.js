@@ -14,7 +14,7 @@ import { View, div, svg, image } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
 import {
   agents, spaces, panes, focused, terminals, machines, layout, shared, setShared,
-  run, props, hc, exec, readTextFile, keys, window, home, appHome, openOverlay,
+  run, props, hc, exec, readTextFile, keys, window, home, appHome, openOverlay, closeOverlay,
 } from "herdr";
 import { A, C, SPIN, CARD, neon, panel, barPic, ensurePic, cardSvg, halo, icon, programIcon, bar, letterTile, statusMark, ago } from "./ui.js";
 
@@ -141,6 +141,7 @@ export default class Quantum extends View {
       case "status": return this.status(cx);
       case "pane": return this.pane(cx);
       case "sidetabs": return this.sidetabs(cx);
+      case "bell": return this.bell(cx);
       default: return this.session(cx);
     }
   }
@@ -152,7 +153,9 @@ export default class Quantum extends View {
       .text_color(C.muted).hover((s) => s.bg("#ffffff16").text_color(C.text))
       .on_mouse_down("left", stop).on_click(action).child(child);
     const hint = this.paletteKey();
-    const blocked = agents().find((a) => a.status === "blocked");
+    const list = agents();
+    const needs = list.filter((a) => a.status === "blocked").length;
+    const done = list.filter((a) => a.status === "done").length;
     const search = h_flex().id("q-search").w_full().h(38).px(14).gap(10).items_center()
       .bg("#0a0d33e0").border(1).border_color("#00000000").cursor_pointer()
       
@@ -172,9 +175,8 @@ export default class Quantum extends View {
       .child(h_flex().flex_1().min_w(0).gap(16).items_center().justify_end()
       .child(btn("q-bell", div().relative().size(20)
         .child(icon("bell", 20, C.muted))
-        .when(Boolean(blocked), (el) => el.child(div().absolute().top(0).right(0).size(7).rounded_full().bg("#ff6b8a")))
-        .when(!blocked, (el) => el.child(div().absolute().top(0).right(0).size(6).rounded_full().bg("#ff7ab8").opacity(0.7))),
-        () => { if (blocked) run("pane.focus", { pane: blocked.pane }); }))
+        .when(needs > 0 || done > 0, (el) => el.child(div().absolute().top(0).right(0).size(7).rounded_full().bg(needs > 0 ? "#ff6b8a" : C.green))),
+        () => openOverlay({ mod: "quantum", kind: "popup", width: 360, height: Math.min(460, 96 + 44 * Math.max(1, needs + done)), props: { role: "bell" } })))
       .child(btn("q-help", icon("help", 19, C.muted), () => run("app.help")))
       .child(btn("q-settings", svg("mods/workspace-chrome/settings.svg").size(19), () => run("app.settings")))
       .child(div().relative().size(36).flex_none()
@@ -436,6 +438,37 @@ export default class Quantum extends View {
       .child(panelBtn("changes", "Changes", "mods/changes/changes.svg"))
       .child(btn(`q-ph-menu-${pane}`, div().text_size(15).child("⋮"), () =>
         openOverlay({ mod: "menu", kind: "popup", width: 220, props: { tab: "pane", target: { pane, terminal: me.terminal } } })));
+  }
+
+
+  // ------------------------------------------------------------ bell popup
+  // Agents that need you (waiting on a question) first, then finished ones; a click goes there.
+  bell(cx) {
+    const all = spaces();
+    const list = agents();
+    const tabOf = (a) => all.find((s) => s.id === a.space)?.tabs.find((t) => t.id === a.tab);
+    const go = (a) => { closeOverlay(props()?.overlay); run("pane.focus", { pane: a.pane }); };
+    const row = (a) => {
+      const machine = a.address.includes("/") ? a.address.split("/")[0] : "";
+      const where = `${a.space_name}${a.tab_name && !/^\d+$/.test(a.tab_name) ? " · " + a.tab_name : ""}`;
+      return h_flex().id(`q-bell-${a.address}`).h(40).px(12).gap(10).items_center().cursor_pointer()
+        .hover((x) => x.bg("#ffffff10")).on_click(() => go(a))
+        .child(programIcon(a.program, 16) ?? icon("terminal", 16, C.muted))
+        .child(v_flex().flex_1().min_w(0)
+          .child(div().truncate().text_size(12.5).text_color(C.text).child(where))
+          .child(div().truncate().text_size(11).text_color(a.status === "blocked" ? C.amber : C.dim)
+            .child(`${a.status === "blocked" ? "Needs you" : "Finished"}${machine ? " · " + machine : ""}`)))
+        .child(div().flex_none().text_size(11).text_color(C.dim).child(ago(tabOf(a)?.changed_at)))
+        .child(statusMark(a.status, 13));
+    };
+    const items = [...list.filter((a) => a.status === "blocked"), ...list.filter((a) => a.status === "done")];
+    return v_flex().id("q-bell-pop").size_full().bg("#0c1034f6").border(1).border_color("#4a58b8aa")
+      .child(h_flex().h(40).px(14).items_center().border_b(1).border_color("#4a58b866")
+        .child(div().flex_1().font_semibold().text_size(13).text_color("#ffffff").child("Notifications"))
+        .child(div().text_size(11.5).text_color(C.dim).child(items.length ? `${items.length}` : "")))
+      .child(items.length
+        ? v_flex().id("q-bell-list").flex_1().min_h(0).py(4).overflow_y_scrollbar().children(items.map(row))
+        : div().flex_1().flex().items_center().justify_center().text_size(12.5).text_color(C.muted).child("Nothing needs you right now."));
   }
 
   // ------------------------------------------------------------ right column switch
