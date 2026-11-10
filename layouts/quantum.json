@@ -218,9 +218,15 @@
                   "type": "block",
                   "content": {
                     "mod": "task-board"
+                  },
+                  "background": "#0b1236b8",
+                  "border": {
+                    "width": 1,
+                    "color": "#4a58b8aa"
                   }
                 }
-              ]
+              ],
+              "padding": null
             }
           ]
         }

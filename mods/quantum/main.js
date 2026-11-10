@@ -155,13 +155,14 @@ export default class Quantum extends View {
       .when(Boolean(hint), (el) => el.child(div().px(8).py(2).bg("#ffffff14").border(1).border_color("#ffffff22").text_size(11.5).text_color(C.text).child(hint)));
     return h_flex().size_full().px(14).gap(16).items_center()
       .when(w?.platform === "macos" && !w?.fullscreen, (el) => el.pl(84))
-      .child(h_flex().w(250).flex_none().gap(12).items_center()
+      .child(h_flex().flex_1().min_w(0).gap(12).items_center()
         .child(div().relative().size(42).flex_none()
           .child(halo("violet", 80, 21, 21, 0.7))
           .child(image(`${A}/logo.svg`).size(42)))
         .child(div().text_size(25).font_bold().text_color("#ffffff").child("Herdr")))
-      .child(div().flex_1().max_w(640).child(neon(this, cx, "search", search, { radius: 19, spread: 12 })))
-      .child(div().flex_1())
+      // equal flex_1 sides keep the search field centred in the window
+      .child(div().w(640).flex_none().child(neon(this, cx, "search", search, { radius: 19, spread: 12 })))
+      .child(h_flex().flex_1().min_w(0).gap(16).items_center().justify_end()
       .child(btn("q-bell", div().relative().size(20)
         .child(icon("bell", 20, C.muted))
         .when(Boolean(blocked), (el) => el.child(div().absolute().top(0).right(0).size(7).rounded_full().bg("#ff6b8a")))
@@ -176,7 +177,7 @@ export default class Quantum extends View {
         .child(div().w(6))
         .child(btn("q-min", div().text_size(16).child("−"), () => run("window.minimize")))
         .child(btn("q-max", div().text_size(13).child(w.maximized ? "❐" : "□"), () => run("window.maximize")))
-        .child(btn("q-close", svg("mods/pane/close.svg").size(14), () => run("window.close"))));
+        .child(btn("q-close", svg("mods/pane/close.svg").size(14), () => run("window.close")))));
   }
 
   paletteKey() {
@@ -323,7 +324,7 @@ export default class Quantum extends View {
     return h_flex().id("q-tabs").size_full().min_w(0).px(0).gap(6).items_start()
       .on_scroll_wheel((e) => { if (Math.abs(e.delta.y) >= 1) run(e.delta.y > 0 ? "tab.prev" : "tab.next"); })
       .child(sq("q-grid", icon("grid", 15, C.muted), () => run("mod.open", { name: "picker" })))
-      .child(h_flex().id("q-tab-scroll").flex_1().min_w(0).h_full().items_center().gap(6).overflow_x_scrollbar().children(shown.map(pill)))
+      .child(h_flex().id("q-tab-scroll").flex_1().min_w(0).h(30).items_start().gap(6).overflow_x_scrollbar().children(shown.map(pill)))
       .child(sq("q-tab-new", div().text_size(17).child("+"), () => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })));
   }
 
