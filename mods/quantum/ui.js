@@ -57,10 +57,10 @@ function frameSvg(w, h, { radius, tone, spread, strength }) {
     + `<stop offset="1" stop-color="${glint}" stop-opacity="${k(0.95)}"/></linearGradient>`;
   const f = (id, sd) => `<filter id="${id}" filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><feGaussianBlur stdDeviation="${sd}"/></filter>`;
   const rect = (sw, extra) => `<rect x="${s}" y="${s}" width="${w}" height="${h}" rx="${r}" fill="none" stroke="url(#g)" stroke-width="${sw}" ${extra}/>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${grad}${f("wide", spread * 0.38)}${f("near", 2)}</defs>`
-    + rect(spread * 0.55, `filter="url(#wide)" opacity="0.6"`)
-    + rect(3, `filter="url(#near)" opacity="0.85"`)
-    + rect(1.2, "")
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${grad}${f("wide", spread * 0.22)}${f("near", 1.2)}</defs>`
+    + rect(spread * 0.28, `filter="url(#wide)" opacity="0.32"`)
+    + rect(1.6, `filter="url(#near)" opacity="0.55"`)
+    + rect(1, "")
     + `</svg>`;
 }
 
@@ -71,7 +71,7 @@ function framePic(cx, size, opts) {
   const w = Math.round(size.width), h = Math.round(size.height);
   if (w < 4 || h < 4) return null;
   const { radius, tone, spread, strength } = opts;
-  const name = `${tone}-${radius}-${spread}-${Math.round(strength * 100)}-${w}x${h}.svg`;
+  const name = `v2-${tone}-${radius}-${spread}-${Math.round(strength * 100)}-${w}x${h}.svg`;
   const rel = `${A}/.glow/${name}`;
   const state = made.get(name);
   if (state === "ready") return image(rel).absolute().left(-spread).top(-spread).w(w + 2 * spread).h(h + 2 * spread);

@@ -25,7 +25,7 @@ live Session panel side by side; then a status bar.
   - **Light:** two blurred copies of the line (wide and near) let the light spill softly
     outside the card and a little inside it.
   - **Glass:** cards are fill `#0c0f34c4`.
-  - **Work area:** its border comes from the layout, so it is a `#b9a4ffb0` line with nine faint
+  - **Work area:** its border comes from the layout, so it is a `#b9a4ffb0` line with six faint
     outer rings instead.
 - **Title bar (56px, draggable):**
   - The atom logo over a violet halo, and "Herdr" at 23px bold.
@@ -94,7 +94,7 @@ live Session panel side by side; then a status bar.
     - `body`: row of `sidebar` (block, `role: "sidebar"`), `work-frame` and `session` (block,
       `role: "session"`).
     - `status`: block, `role: "status"`.
-  - Inside `work-frame`, `work-glow3` → `work-glow1` (three ring columns) wrap `work`, which holds
+  - Inside `work-frame`, `work-glow3` → `work-glow1` (six ring columns) wrap `work`, which holds
     `tabs` (`role: "tabs"`) and `work-body`. `work-body` contains the active tab, and the `panel`
     stack of `files` and `changes`.
   - Root settings: `titlebar: "none"`, `theme: "quantum"` plus `colors` overrides,
