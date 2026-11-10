@@ -25,8 +25,9 @@ live Session panel side by side; then a status bar.
   - **Light:** two blurred copies of the line (wide and near) let the light spill softly
     outside the card and a little inside it.
   - **Glass:** cards are fill `#0c0f34c4`.
-  - **Work area:** its border comes from the layout, so it is a `#b9a4ffb0` line with six faint
-    outer rings instead.
+  - **Terminal card:** the tabs sit on its top edge like folder tabs. Its neon runs 4px
+    outside the panes: cyan `#7cf0ff` at the top-left, `#a48bff` along the top, bright
+    `#e58bff` along the bottom.
 - **Title bar (56px, draggable):**
   - The atom logo over a violet halo, and "Herdr" at 23px bold.
   - A 38px pill search field with an edge light and the palette key on a keycap.
@@ -95,12 +96,13 @@ live Session panel side by side; then a status bar.
 - **Layout:** `layouts/quantum.json`.
   - Root `column`:
     - `top`: block, `quantum` with `role: "top"`.
-    - `body`: row of `sidebar` (block, `role: "sidebar"`), `work-frame` and `session` (block,
-      `role: "session"`).
+    - `body`: row of `sidebar` (block, `role: "sidebar"`), `work` and `session` (a column of
+      `side-tabs` and the `side-body` stack).
     - `status`: block, `role: "status"`.
-  - Inside `work-frame`, `work-glow3` → `work-glow1` (six ring columns) wrap `work`, which holds
-    `tabs` (`role: "tabs"`) and `work-body`. `work-body` contains the active tab, and the `panel`
-    stack of `files` and `changes`.
+  - `work` is a column of `tabs` (40px, `role: "tabs"`) and `card`.
+    - `card` is a row of `edge-left` (12px), `work-body` and `edge-right` (12px), over
+      `edge-bottom` (12px). The edges are `role: "edge"` blocks.
+    - `work-body` contains the active tab, and the `panel` stack of `files` and `changes`.
   - Root settings: `titlebar: "none"`, `theme: "quantum"` plus `colors` overrides,
     `terminal_opacity: 0.86`, and the background image.
 - **Mod:** `mods/quantum`.
