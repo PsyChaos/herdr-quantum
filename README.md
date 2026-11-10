@@ -16,7 +16,7 @@ Or copy it by hand:
 
 ```sh
 git clone https://github.com/PsyChaos/herdr-quantum
-cp -r herdr-quantum/mods/quantum ~/.config/herdr-app/mods/
+cp -r herdr-quantum/mods/quantum herdr-quantum/mods/quantum-files herdr-quantum/mods/quantum-changes ~/.config/herdr-app/mods/
 cp herdr-quantum/layouts/quantum.json ~/.config/herdr-app/layouts/
 cp herdr-quantum/themes/quantum.json ~/.config/herdr-app/themes/
 herdr-app do layout.switch '{"name":"quantum"}'
@@ -61,3 +61,10 @@ the one in [`extras/claude-statusline.sh`](extras/claude-statusline.sh):
 cp extras/claude-statusline.sh ~/.claude/statusline.sh
 jq '.statusLine={"type":"command","command":"~/.claude/statusline.sh","padding":0}' ~/.claude/settings.json > /tmp/s && mv /tmp/s ~/.claude/settings.json
 ```
+
+## Files and Changes panels
+
+`mods/quantum-files` and `mods/quantum-changes` are copies of Herdr's own `files` and `changes`
+mods (Apache License 2.0, the license is in each folder) with square corners and slightly larger
+text, so they match the layout. [`tools/fork-panels.py`](tools/fork-panels.py) regenerates them
+from your Herdr install: `python3 tools/fork-panels.py quantum 2 1`.
