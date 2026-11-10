@@ -98,13 +98,8 @@
               "id": "work-body",
               "type": "row",
               "padding": 0,
-              "gap": 0,
-              "background": "#0b1236b8",
-              "border": {
-                "width": 1,
-                "color": "#4a58b8aa"
-              },
-              "resizable": false,
+              "gap": 10,
+              "resizable": true,
               "children": [
                 {
                   "id": "main",
@@ -112,17 +107,17 @@
                   "content": {
                     "tab": "active",
                     "pane": {
-                      "gap": 8,
+                      "gap": 10,
                       "radius": 0,
-                      "background": "#00000000",
+                      "background": "#0b1236b8",
                       "lone": true,
                       "border": {
                         "width": 1,
-                        "color": "#00000000"
+                        "color": "#4a58b8aa"
                       },
                       "focus": {
                         "width": 1,
-                        "color": "#4fd8ff88"
+                        "color": "#4fd8ffaa"
                       },
                       "header": {
                         "content": {
@@ -169,7 +164,12 @@
                         }
                       ]
                     }
-                  ]
+                  ],
+                  "background": "#0b1236b8",
+                  "border": {
+                    "width": 1,
+                    "color": "#4a58b8aa"
+                  }
                 }
               ]
             }
