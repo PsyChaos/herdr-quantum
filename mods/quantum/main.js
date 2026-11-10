@@ -290,7 +290,7 @@ export default class Quantum extends View {
         ])))
       .child(div().mx(14).my(6).h(1).bg("#8b6cff33"))
       .child(foot("q-add-machine", "plus", "Add machine", () => run("mod.open", { name: "machine-add" })));
-    return panel(this, cx, "sidebar", content, { id: "q-sidebar" });
+    return panel(this, cx, "sidebar", content, { id: "q-sidebar", margin: 0 });
   }
 
   // ------------------------------------------------------------ tabs
@@ -320,12 +320,11 @@ export default class Quantum extends View {
     const sq = (id, child, action) => div().id(id).size(30).flex_none().flex().items_center().justify_center()
       .bg("#12164acc").border(1).border_color("#2e3270").text_color(C.muted).hover((x) => x.text_color("#ffffff"))
       .on_mouse_down("left", stop).on_click(action).child(child);
-    return h_flex().id("q-tabs").size_full().min_w(0).px(6).gap(6).items_center()
+    return h_flex().id("q-tabs").size_full().min_w(0).px(0).gap(6).items_start()
       .on_scroll_wheel((e) => { if (Math.abs(e.delta.y) >= 1) run(e.delta.y > 0 ? "tab.prev" : "tab.next"); })
       .child(sq("q-grid", icon("grid", 15, C.muted), () => run("mod.open", { name: "picker" })))
-      .child(h_flex().id("q-tab-scroll").min_w(0).h_full().items_center().gap(6).overflow_x_scrollbar().children(shown.map(pill)))
-      .child(sq("q-tab-new", div().text_size(17).child("+"), () => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })))
-      .child(div().flex_1());
+      .child(h_flex().id("q-tab-scroll").flex_1().min_w(0).h_full().items_center().gap(6).overflow_x_scrollbar().children(shown.map(pill)))
+      .child(sq("q-tab-new", div().text_size(17).child("+"), () => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })));
   }
 
   // ------------------------------------------------------------ session
@@ -345,7 +344,7 @@ export default class Quantum extends View {
         .child(div().flex_1().text_size(14).font_semibold().text_color("#ffffff").child(title))
         .when(Boolean(extra), (el) => el.child(extra)))
       .when(rule, (el) => el.child(div().mt(2).mb(3).h(1).bg("#24306a")));
-    const wrap = (key, el, bright, fill = false) => div().px(4).when(fill, (d) => d.flex_1().min_h(0))
+    const wrap = (key, el, bright, fill = false) => div().when(fill, (d) => d.flex_1().min_h(0))
       .child(neon(this, cx, key, fill ? el.h_full() : el, { radius: 12, spread: 6, tone: "card", strength: bright ? 1 : 0.9, outer: 0.2, inner: true, tall: fill }));
 
     const row = (ic, label, value, valueIcon) => h_flex().h(16).gap(9).items_center().text_size(12.3)
@@ -394,7 +393,7 @@ export default class Quantum extends View {
           .child(div().flex_none().text_color(C.violet).child("›"))
           .child(div().flex_1().truncate().text_color(i === s.output.length - 1 ? "#ffffff" : C.muted).child(l.trim())))));
 
-    return v_flex().size_full().gap(12).pt(6).pb(8)
+    return v_flex().size_full().gap(10)
       .child(wrap("run", runCard, true)).child(wrap("cmds", cmds)).child(wrap("out", out, false, true));
   }
 
@@ -434,19 +433,23 @@ export default class Quantum extends View {
   // ------------------------------------------------------------ right column switch
   sidetabs(cx) {
     const active = find(layout(), "side-body")?.active ?? "side-session";
+    // Underline tabs: equal halves, the active one lit cyan with a 2px bar along its bottom.
     const seg = (id, child, ic, label) => {
       const on = active === child;
-      const el = h_flex().id(id).w_full().h(32).gap(8).justify_center().items_center().text_size(12.5)
-        .when(on, (e) => e.border(1).border_color("#00000000").font_semibold().text_color("#ffffff"))
-        .when(!on, (e) => e.border(1).border_color("#00000000").text_color("#dfe4ff").cursor_pointer().hover((x) => x.bg("#ffffff10").text_color("#ffffff")))
+      return v_flex().id(id).flex_1().h_full().cursor_pointer()
+        .when(on, (e) => e.bg("#4fd8ff12"))
+        .when(!on, (e) => e.hover((x) => x.bg("#ffffff0a")))
         .on_click(() => run("layout.select", { stack: "side-body", child }))
-        .child(ic).child(label);
-      return div().flex_1().child(neon(this, cx, id, el, { on, radius: 9, spread: 6, tone: "seg", gloss: true, outer: 0.5 }));
+        .child(h_flex().flex_1().gap(8).justify_center().items_center().text_size(12.5)
+          .text_color(on ? "#ffffff" : C.muted).when(on, (e) => e.font_semibold())
+          .child(ic).child(label))
+        .child(div().h(2).w_full().bg(on ? C.cyan : "#00000000"));
     };
-    const header = h_flex().w_full().p(4).gap(4).items_center().bg("#141e42e8")
-      .child(seg("q-seg-session", "side-session", icon("activity", 15, C.cyan), "Session"))
-      .child(seg("q-seg-tasks", "side-tasks", icon("check", 15, "#dfe4ff"), "Tasks"));
-    return div().size_full().px(4).pt(12).child(header);
+    const header = h_flex().w_full().h(30).bg("#0b1236b8").border(1).border_color("#4a58b8aa")
+      .child(seg("q-seg-session", "side-session", icon("activity", 14, active === "side-session" ? C.cyan : C.muted), "Session"))
+      .child(div().w(1).h_full().bg("#4a58b8aa"))
+      .child(seg("q-seg-tasks", "side-tasks", icon("check", 14, active === "side-tasks" ? C.cyan : C.muted), "Tasks"));
+    return div().size_full().child(header);
   }
 
   // ------------------------------------------------------------ status bar
@@ -474,6 +477,6 @@ export default class Quantum extends View {
       .child(h_flex().id("q-palette").gap(8).items_center().cursor_pointer().text_color(C.muted)
         .hover((x) => x.text_color("#ffffff")).on_click(() => run("app.palette"))
         .child(icon("terminal", 15, C.lilac)).child("commands"));
-    return div().id("q-status").size_full().px(6).py(4).child(div().size_full().bg("#0b123699").border(1).border_color("#4a58b8aa").child(content));
+    return div().id("q-status").size_full().pt(8).child(div().size_full().bg("#0b123699").border(1).border_color("#4a58b8aa").child(content));
   }
 }

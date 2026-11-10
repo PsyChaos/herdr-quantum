@@ -32,8 +32,8 @@
     "fit": "cover"
   },
   "padding": [
-    4,
-    6
+    6,
+    10
   ],
   "gap": 0,
   "children": [
@@ -54,7 +54,7 @@
     {
       "id": "body",
       "type": "row",
-      "gap": 0,
+      "gap": 10,
       "resizable": true,
       "children": [
         {
@@ -189,7 +189,7 @@
               "id": "side-tabs",
               "type": "block",
               "size": {
-                "px": 62
+                "px": 40
               },
               "content": {
                 "mod": "quantum",
@@ -216,10 +216,6 @@
                 {
                   "id": "side-tasks",
                   "type": "block",
-                  "padding": [
-                    6,
-                    10
-                  ],
                   "content": {
                     "mod": "task-board"
                   }
@@ -234,7 +230,7 @@
       "id": "status",
       "type": "block",
       "size": {
-        "px": 44
+        "px": 46
       },
       "content": {
         "mod": "quantum",
