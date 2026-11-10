@@ -1,7 +1,8 @@
 # Quantum
 
-A deep-space layout for Herdr. The window sits on a violet and blue nebula, with a ringed planet
-at the top and the glowing rim of a giant planet along the bottom. Every region is a dark glass
+A deep-space layout for Herdr. The window sits on near-black deep navy, with nebula colour only
+where the panels leave it showing: around a glassy ringed planet at the top, the window's edges
+and lower corners, and the glowing rim of a giant planet behind the status bar. Every region is a dark glass
 card whose edges catch the light: a thin rim that runs bright cyan from the top-left corner and
 fades to violet along each edge, spilling a little light around its brightest parts. From top to
 bottom: a title bar with a command search; then the workspaces and agents, the terminals and a
@@ -11,27 +12,36 @@ live Session panel side by side; then a status bar.
 
 ## What you see
 
-- **Background:** `mods/quantum/space.jpg` (2560×1440, `cover`), made by `art/nebula.py`. It has:
-  - nebulae from four fractal-noise layers in violet `#7b3cff`, blue `#2f6bff`, magenta
-    `#d23cff` and cyan `#2fd0ff`;
-  - about 1800 stars, 26 of them with four-point glints;
-  - a ringed planet near the top right, its ring glowing and tilted −16°;
-  - a horizon planet whose rim is a white line with a violet bloom and a lens flare at the top;
-  - neon swirls in the lower corners.
+- **Background:** `mods/quantum/nebula-deep.jpg` (2560×1440, `cover`), made by `art/nebula.py`.
+  It has:
+  - a base of `#03041a` to `#080a2e`;
+  - nebulae from four fractal-noise layers in violet `#7b3cff`, blue `#2f5bff`, magenta
+    `#d23cff` and cyan `#2fd0ff`, masked to the title band, the side edges and the lower corners;
+  - about 1700 stars, 30 of them with four-point glints, and two starbursts (pink in the
+    sidebar's lower corner, blue in the right column's);
+  - a glassy ringed planet over the title bar: a bright rim, four rings tilted −22°;
+  - a giant planet rising behind the status bar: white rim, blue bloom, pink flare, orbit lines;
+  - neon swirls near the planet and in the lower right.
 - **Neon frames:** the look shared by every card.
-  - **Line:** each lit card or item has a thin neon line. Its color and brightness travel along
-    the edge: bright cyan `#7cf0ff` at the top-left, violet `#9b7bff` dimming to `#7a5cff` around
-    the middle, and a pink-violet `#d47bff` glint at the bottom-right.
-  - **Light:** two blurred copies of the line (wide and near) let the light spill softly
-    outside the card and a little inside it.
-  - **Glass:** cards are fill `#0c0f34c4`.
-  - **Terminal card:** the tabs sit on its top edge like folder tabs. Its neon runs 4px
-    outside the panes: cyan `#7cf0ff` at the top-left, `#a48bff` along the top, bright
-    `#e58bff` along the bottom.
+  - **Line:** each lit card has a crisp 1.2px line whose colour runs along the diagonal: cyan
+    `#b8f6ff` at the top-left, `#8d96ff`, violet `#7a5cff`, pink-violet `#e08bff` at the
+    bottom-right. A white highlight runs along the top edge.
+  - **Brightness:** brightest along the top, dimmest halfway down the sides, brighter again
+    at the bottom.
+  - **Light:** a wide blurred copy in `#5a4cff` and a near one spill the light around the card.
+  - **Glass:** panels are nearly opaque navy `#0d1338ea`; the session cards `#0c1232ee`.
+  - **Selected items** (the active space, focused and working agents, the active tab, the
+    Session switch): a blue frame (`#eef6ff` line, `#3f66ff` light) whose picture also paints
+    the fill, navy `#18205e` with a blue inner glow brighter at the top and bottom, so the item
+    looks lit and slightly raised. The picture sits behind the item's content.
+  - **Terminal card:** the brightest frame. Its light is pink-violet `#e08bff` on the left,
+    blue in the middle, cyan `#3fd8ff` on the right, with a bright pink `#f0a8ff` bloom along
+    the bottom. Fill `#0a1030f2`, line `#e2d6ff`.
 - **Title bar (56px, draggable):**
-  - The atom logo over a violet halo, and "Herdr" at 23px bold.
+  - The atom logo (42px) over a violet halo, and "Herdr" at 25px bold.
   - A 38px pill search field with an edge light and the palette key on a keycap.
-  - Help, settings and a planet orb on the right. Window buttons appear where the system draws
+  - A bell (a pink dot; red when an agent needs you, and a click focuses it), help, settings
+    and a planet orb on the right. Window buttons appear where the system draws
     none.
 - **Workspaces and agents (276px):**
   - **Header:** "Workspaces" with a + button.
@@ -42,23 +52,26 @@ live Session panel side by side; then a status bar.
   - **Agents:** grouped as Pinned, Needs you (amber), Working (cyan), Done and Idle, each group
     with its count.
   - **Agent rows:** the program icon, space and tab, machine, time since the last change, and a
-    status mark. The mark is a braille spinner for working, an amber "!" for blocked, a green dot
-    for done and a ring for idle.
+    status mark. The mark is an amber ring for working, an amber "!" for blocked, a green dot
+    for done and a dim ring for idle. Nothing spins.
   - **Sub-agents:** nested under their parent with "└". Clicking the parent's icon folds them.
   - **Footer:** Settings and Add machine.
 - **Work area:**
-  - **Tab bar (44px):** a grid button (picker), the tabs as 32px pills, then +. The active tab
-    is a violet glass pill in a neon frame. Files and Changes live only in the Session header.
+  - **Tab bar (40px):** a dark rounded strip (`#070a26d0`) holding a grid button (picker), the
+    tabs as 32px pills, then +. The active tab is lit like a selected item.
   - **Panes:** cards with radius 12 and a `#8b6cff77` border; the focused pane's border is lilac
     `#c4b2ffee`.
   - **Pane header (36px, `role: "pane"`):** the program icon and name, the folder in dim text,
     the status, then `+` (split right), Files, Changes and `⋮` (the pane menu). Files and
     Changes appear only here.
-  - **Terminals:** opacity 0.86 over `#090b26`.
+  - **Terminals:** `terminal_opacity` 0, over the card's own fill.
 - **Right column (330px):**
-  - **Header (`role: "sidetabs"`):** a segmented control, Session and Tasks. It switches the
-    `side-body` stack between this mod's session panel and Herdr's `task-board`.
-  - **Cards:** Current Run, Recent Commands and Run Output, each an edge-lit card.
+  - **Frame:** the `session-frame` column, `#080c28d8`, radius 18, a `#7c7ef0bb` line, 10px in
+    from the column's edges.
+  - **Header (`role: "sidetabs"`):** a segmented control, Session, Tasks and Files. It switches
+    the `side-body` stack between this mod's session panel, Herdr's `task-board` and `files`.
+  - **Cards:** Current Run, Recent Commands and Run Output (it fills the rest of the column),
+    each an edge-lit card.
 - **Status bar (44px):** machine, branch, agent count with a glowing dot, CPU, RAM, ↑↓ tokens,
   and "commands".
 - **Theme:** `themes/quantum.json`: terminal `#0a0b26`, foreground `#dfe4ff`, cyan cursor and
@@ -73,23 +86,24 @@ live Session panel side by side; then a status bar.
 - **Current Run:**
   - A status pill with its own edge light: Running in cyan (breathing), Needs you in amber, Done
     in green, Idle in dim.
-  - Rows for agent, project, workspace and machine, branch, model (effort), started, and tokens.
+  - Rows for agent, project, workspace and machine, branch, mode (auto, accept edits, plan,
+    bypass or default), model (effort), started, and tokens.
   - A 30-segment context bar shading from cyan to violet. It breathes while the agent works and
     shows the percent left and the 5-hour and 7-day limits.
-- **Recent Commands:** the last six `● Bash(...)` calls, newest first. The newest has a spinner
-  and a breathing cyan rim while the agent works.
+- **Recent Commands:** the last six `● Bash(...)` calls, newest first. The newest has a cyan dot
+  and a cyan frame while the agent works.
 - **Run Output:** the last seven conversation lines above the agent's prompt box.
 - **Clicks and keys:**
   - A space row selects the space; its + makes a new one on that machine.
   - An agent row focuses its pane.
   - A tab selects; double-click renames; right-click opens the tab menu.
   - Scrolling over the tab bar steps through the tabs.
-  - Files and Changes in the pane header toggle the side panel; Session and Tasks switch the
+  - Files and Changes in the pane header toggle the side panel; Session, Tasks and Files switch the
     right column.
   - Search and "commands" open the palette.
-- **Refresh:** the session panel every 2.5s, the status bar every 3s, and the sidebar's
-  "4m" labels every 30s. Spinners and breathing use native `.frames` and `.loop`, never a
-  timer.
+- **Refresh:** the session panel every 4s, the status bar every 5s, and the sidebar's
+  "4m" labels every 30s. There are no animations (no `.frames`, `.loop` or `.spin`), so the
+  window only redraws when something changes.
 
 ## Built from
 
@@ -99,12 +113,14 @@ live Session panel side by side; then a status bar.
     - `body`: row of `sidebar` (block, `role: "sidebar"`), `work` and `session` (a column of
       `side-tabs` and the `side-body` stack).
     - `status`: block, `role: "status"`.
+  - `session` is padded 10px and holds `session-frame`, a column of `side-tabs` (56px) and the
+    `side-body` stack (`side-session`, `side-tasks`, `side-files`).
   - `work` is a column of `tabs` (40px, `role: "tabs"`) and `card`.
     - `card` is a row of `edge-left` (12px), `work-body` and `edge-right` (12px), over
       `edge-bottom` (12px). The edges are `role: "edge"` blocks.
     - `work-body` contains the active tab, and the `panel` stack of `files` and `changes`.
   - Root settings: `titlebar: "none"`, `theme: "quantum"` plus `colors` overrides,
-    `terminal_opacity: 0.86`, and the background image.
+    `terminal_opacity: 0`, and the background image.
 - **Mod:** `mods/quantum`.
   - `main.js` holds the seven roles: top, sidebar, tabs, pane, sidetabs, session, status. `ui.js` holds the palette, `neon` (a framed element), `panel`, `bar`, `halo`, letter tiles, status marks and `ago`.
 - **Shipped mods used:** `files`, `changes`, `task-board`; `new-menu`, `menu`, `picker`
@@ -138,18 +154,18 @@ live Session panel side by side; then a status bar.
   - `on_size_change` measures each lit element;
   - `ui.js` writes an SVG of that size (a gradient stroke plus two `feGaussianBlur` copies) to
     `mods/quantum/.glow/`, named by tone, radius, spread and size;
-  - the SVG is shown as an `absolute` image over the element.
+  - the SVG is shown as an `absolute` image over the element (behind it for selected items,
+    whose picture carries the fill).
   The folder is hidden, so writing to it doesn't reload the mod. Drawing the light from solid
   segments or stacked borders looked broken (gaps at corners, banding).
 - **Images don't stretch:** `image()` keeps its aspect ratio, so glows from pictures only work
   for round spots (`halo`).
 - **Padding:** it is a number or `[vertical, horizontal]`. Theme files take `#rrggbb` only;
   translucency goes in the layout's `colors` as `#rrggbbaa`.
-- **Image cache:** the app caches images by path. Rename a picture (as `nebula.jpg` became
-  `space.jpg`) to see a new version at once.
+- **Image cache:** the app caches images by path. Rename a picture (as `space.jpg` became
+  `nebula-deep.jpg`) to see a new version at once.
 - **The card's neon is drawn in pieces.** Only the root node draws a background picture,
-  so a node's `background.image` can't carry the card's frame. Raster images are also needed
-  there, not SVG. So:
+  so a node's `background.image` can't carry the card's frame. So:
   - one SVG of the whole card is drawn piecewise;
   - the tab bar draws its top part (absolute, behind the tabs);
   - three 12px `edge` blocks (`role: "edge"`, `side: left | right | bottom`) draw their
@@ -159,9 +175,9 @@ live Session panel side by side; then a status bar.
 - **Square corners:** a terminal paints its background over its whole pane, square, whatever
   the pane radius. So:
   - `terminal_opacity` is 0 and pane backgrounds are transparent;
-  - the card's fill comes from the `work-body` node: `#0e1236e0`, radius 18, which layout
+  - the card's fill comes from the `work-body` node: `#0a1030f2`, radius 18, which layout
     nodes do round;
-  - the crisp line is that node's own `border` (`#dcd2ffee`), since it follows the rounded
+  - the crisp line is that node's own `border` (`#e2d6ff`), since it follows the rounded
     corners;
   - the edge strips add only the coloured light, cyan on the left to violet-pink on the
     right. They can't reach into the card's corners.
@@ -176,8 +192,8 @@ live Session panel side by side; then a status bar.
   and planets behind edge-lit glass cards, with no layout error.
 - Focusing a Claude Code pane fills Current Run within 3s: model, effort, tokens, and the context
   bar with its percent.
-- A working agent shows a cyan spinner and a breathing rim in the sidebar, in Recent Commands
-  and on the Running pill.
+- A working agent shows an amber ring and a lit row in the sidebar, a cyan dot in Recent
+  Commands and the cyan Running pill.
 - Clicking a space row switches spaces. The search field opens the palette. Files in a pane
   header opens the Files panel beside the panes, and a second click closes it. Tasks shows the
   task board in the right column.

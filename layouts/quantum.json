@@ -10,15 +10,15 @@
   "theme": "quantum",
   "colors": {
     "canvas": "#00000000",
-    "chrome": "#0c0f34b8",
-    "surface": "#11154299",
-    "background": "#0e1236",
-    "border": "#5d63d855",
+    "chrome": "#0a0e2ce6",
+    "surface": "#0c1232dd",
+    "background": "#0a1030",
+    "border": "#4a52b077",
     "input": "#8b6cffaa",
     "hover": "#ffffff12",
-    "selected": "#3a3fb0aa",
-    "raised": "#1a1f5acc",
-    "popover": "#10133ff2",
+    "selected": "#2a3290cc",
+    "raised": "#151a4ee8",
+    "popover": "#0c1034f6",
     "muted": "#a3a9e0",
     "dim": "#6d73b3"
   },
@@ -28,7 +28,7 @@
   ],
   "terminal_opacity": 0,
   "background": {
-    "image": "mods/quantum/space.jpg",
+    "image": "mods/quantum/nebula-deep.jpg",
     "fit": "cover"
   },
   "padding": [
@@ -192,11 +192,11 @@
                           ]
                         }
                       ],
-                      "background": "#0e1236e0",
+                      "background": "#0a1030f2",
                       "radius": 18,
                       "border": {
                         "width": 1,
-                        "color": "#dcd2ffee"
+                        "color": "#e2d6ffff"
                       }
                     },
                     {
@@ -246,46 +246,74 @@
           "resizable": false,
           "children": [
             {
-              "id": "side-tabs",
-              "type": "block",
-              "size": {
-                "px": 60
+              "id": "session-frame",
+              "type": "column",
+              "resizable": false,
+              "background": "#080c28d8",
+              "radius": 18,
+              "border": {
+                "width": 1,
+                "color": "#7c7ef0bb"
               },
-              "content": {
-                "mod": "quantum",
-                "props": {
-                  "role": "sidetabs"
-                }
-              }
-            },
-            {
-              "id": "side-body",
-              "type": "stack",
-              "active": "side-session",
               "children": [
                 {
-                  "id": "side-session",
+                  "id": "side-tabs",
                   "type": "block",
+                  "size": {
+                    "px": 56
+                  },
                   "content": {
                     "mod": "quantum",
                     "props": {
-                      "role": "session"
+                      "role": "sidetabs"
                     }
                   }
                 },
                 {
-                  "id": "side-tasks",
-                  "type": "block",
-                  "padding": [
-                    6,
-                    10
-                  ],
-                  "content": {
-                    "mod": "task-board"
-                  }
+                  "id": "side-body",
+                  "type": "stack",
+                  "active": "side-session",
+                  "children": [
+                    {
+                      "id": "side-session",
+                      "type": "block",
+                      "content": {
+                        "mod": "quantum",
+                        "props": {
+                          "role": "session"
+                        }
+                      }
+                    },
+                    {
+                      "id": "side-tasks",
+                      "type": "block",
+                      "padding": [
+                        6,
+                        10
+                      ],
+                      "content": {
+                        "mod": "task-board"
+                      }
+                    },
+                    {
+                      "id": "side-files",
+                      "type": "block",
+                      "padding": [
+                        6,
+                        10
+                      ],
+                      "content": {
+                        "mod": "files"
+                      }
+                    }
+                  ]
                 }
               ]
             }
+          ],
+          "padding": [
+            10,
+            10
           ]
         }
       ]

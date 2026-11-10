@@ -46,6 +46,10 @@ function parseScreen(text) {
       const m = l.match(/^\s*(\S[^|]*?)(?: · (low|medium|high|xhigh|max))? \|.*?ctx\s+\S*\s*%(\d+)\s+(\S+)\/(\S+)(?:.*?↑(\S+)\s+↓(\S+))?(?:.*?5s (\d+)%)?(?:.*?7g (\d+)%)?/);
       if (m) Object.assign(info, { model: m[1].trim(), effort: m[2], left: +m[3], used: m[4], size: m[5], up: m[6], down: m[7], l5: m[8], l7: m[9] });
     }
+    if (!info.mode) {
+      const md = l.match(/(auto mode|accept edits|plan mode|bypass permissions) on/);
+      if (md) info.mode = { "auto mode": "auto", "accept edits": "accept edits", "plan mode": "plan", "bypass permissions": "bypass" }[md[1]];
+    }
     if (!info.doing) {
       const d = l.match(/^\s*[✻✽✢·*✶✳]\s+(\S+…)\s+\(([^)]*)\)/);
       if (d) info.doing = { verb: d[1], detail: d[2] };
@@ -141,6 +145,7 @@ export default class Quantum extends View {
       .text_color(C.muted).hover((s) => s.bg("#ffffff16").text_color(C.text))
       .on_mouse_down("left", stop).on_click(action).child(child);
     const hint = this.paletteKey();
+    const blocked = agents().find((a) => a.status === "blocked");
     const search = h_flex().id("q-search").w_full().h(38).px(14).gap(10).items_center().rounded(19)
       .bg("#0a0d33e0").border(1).border_color("#00000000").cursor_pointer()
       
@@ -151,12 +156,17 @@ export default class Quantum extends View {
     return h_flex().size_full().px(14).gap(16).items_center()
       .when(w?.platform === "macos" && !w?.fullscreen, (el) => el.pl(84))
       .child(h_flex().w(250).flex_none().gap(12).items_center()
-        .child(div().relative().size(38).flex_none()
-          .child(halo("violet", 70, 19, 19, 0.6))
-          .child(image(`${A}/logo.svg`).size(38)))
-        .child(div().text_size(23).font_bold().text_color("#ffffff").child("Herdr")))
+        .child(div().relative().size(42).flex_none()
+          .child(halo("violet", 80, 21, 21, 0.7))
+          .child(image(`${A}/logo.svg`).size(42)))
+        .child(div().text_size(25).font_bold().text_color("#ffffff").child("Herdr")))
       .child(div().flex_1().max_w(640).child(neon(this, cx, "search", search, { radius: 19, spread: 12 })))
       .child(div().flex_1())
+      .child(btn("q-bell", div().relative().size(20)
+        .child(icon("bell", 20, C.muted))
+        .when(Boolean(blocked), (el) => el.child(div().absolute().top(0).right(0).size(7).rounded_full().bg("#ff6b8a")))
+        .when(!blocked, (el) => el.child(div().absolute().top(0).right(0).size(6).rounded_full().bg("#ff7ab8").opacity(0.7))),
+        () => { if (blocked) run("pane.focus", { pane: blocked.pane }); }))
       .child(btn("q-help", icon("help", 19, C.muted), () => run("app.help")))
       .child(btn("q-settings", svg("mods/workspace-chrome/settings.svg").size(19), () => run("app.settings")))
       .child(div().relative().size(36).flex_none()
@@ -190,14 +200,14 @@ export default class Quantum extends View {
       const repo = s.folder && s.folder !== home() ? base(s.folder) : "";
       const right = [repo && norm(repo) !== norm(s.name) ? repo : null, s.branch].filter(Boolean).join(" · ");
       const row = h_flex().id(`q-sp-${s.id}`).h(30).px(8).gap(10).items_center().rounded(9).cursor_pointer()
-        .when(s.active, (el) => el.bg("#3b2fa0aa").border(1).border_color("#00000000"))
+        .when(s.active, (el) => el.border(1).border_color("#00000000"))
         .when(!s.active, (el) => el.border(1).border_color("#00000000").hover((st) => st.bg("#ffffff10")))
         .on_click(() => run("space.select", { id: s.id }))
         .child(letterTile(s.name, 20))
         .child(div().flex_none().max_w(150).truncate().text_size(13.5).text_color(s.active ? "#ffffff" : C.text).font_medium().child(s.name))
         .when(s.status && s.status !== "idle", (el) => el.child(statusMark(s.status, 12)))
         .child(div().flex_1().min_w(0).text_right().truncate().text_size(11.5).text_color(s.active ? "#c8ccef" : C.dim).child(right));
-      return div().px(10).py(2).child(neon(this, cx, `sp-${s.id}`, row, { on: s.active, radius: 9, spread: 8, gloss: true }));
+      return div().px(10).py(2).child(neon(this, cx, `sp-${s.id}`, row, { on: s.active, radius: 9, spread: 9, gloss: true }));
     };
 
     const machineRow = (m) => {
@@ -239,7 +249,7 @@ export default class Quantum extends View {
       const detail = depth ? (a.program?.name ?? a.title) : `${a.space_name}${a.tab_name && !/^\d+$/.test(a.tab_name) ? " · " + a.tab_name : ""}`;
       const hot = a.focused || a.status === "working";
       const row = h_flex().id(`q-ag-${a.address}`).h(28).px(8).gap(8).items_center().rounded(9).cursor_pointer()
-        .when(hot, (el) => el.bg(a.focused ? "#3b2fa0aa" : "#1b2a7a88").border(1).border_color("#00000000"))
+        .when(hot, (el) => el.border(1).border_color("#00000000"))
         .when(!hot, (el) => el.border(1).border_color("#00000000").hover((st) => st.bg("#ffffff10")))
         .on_click(() => run("pane.focus", { pane: a.pane }))
         .when(depth > 0, (el) => el.child(div().w(14 * depth).flex_none().text_color(C.dim).text_size(12).child("└")))
@@ -251,7 +261,7 @@ export default class Quantum extends View {
         .when(subs.length > 0, (el) => el.child(div().text_size(10).text_color(C.dim).child(folded ? "›" : "⌄")))
         .child(div().w(24).flex_none().text_right().text_size(11).text_color(C.dim).child(ago(tabOf(a)?.changed_at)))
         .child(statusMark(a.status, 13));
-      const wrapped = div().px(10).py(1).child(neon(this, cx, `ag-${a.address}`, row, { on: hot, radius: 9, spread: 8, tone: a.status === "working" ? "cyan" : "violet", gloss: true }));
+      const wrapped = div().px(10).py(1).child(neon(this, cx, `ag-${a.address}`, row, { on: hot, radius: 9, spread: 9, strength: a.focused ? 1 : 0.75, gloss: true }));
       return [wrapped, ...(folded ? [] : subs.flatMap((s) => agentRow(s, depth + 1)))];
     };
 
@@ -292,9 +302,9 @@ export default class Quantum extends View {
     const shown = space?.tabs ?? [];
     const all = panes();
     const cardTop = this.syncCard(cx);
-    const shape = (el, on) => el.h(34).px(12).gap(8).items_center().flex_none().rounded_t(10).text_size(13)
-      .bg(on ? "#2a2384f0" : "#12164acc").border_t(1).border_l(1).border_r(1).border_color(on ? "#00000000" : "#8b6cff44")
-      .text_color(on ? "#ffffff" : C.muted);
+    const shape = (el, on) => el.h(32).mb(5).px(12).gap(8).items_center().flex_none().rounded(10).text_size(13)
+      .when(!on, (e) => e.bg("#0b1034ee")).border(1).border_color(on ? "#00000000" : "#4c50b088")
+      .text_color(on ? "#ffffff" : "#c8cdf5");
     const pill = (c) => {
       const program = all.find((p) => p.tab === c.id && p.program?.agent)?.program ?? all.find((p) => p.tab === c.id)?.program;
       const auto = /^\d+$/.test(c.name) || /^tb\d+$/.test(c.name);
@@ -312,7 +322,7 @@ export default class Quantum extends View {
         .when(c.active, (el) => el.child(div().id(`q-tabx-${c.id}`).text_color(C.muted).hover((x) => x.text_color("#ffffff"))
           .on_mouse_down("left", stop).on_click((_e, cx) => { cx.stop_propagation(); run("tab.close", { id: c.id }); })
           .child(svg("mods/pane/close.svg").size(12))));
-      return div().flex_none().child(neon(this, cx, `tab-${c.id}`, el, { on: c.active, radius: 10, spread: 6, strength: 0.9, full: false, gloss: true }));
+      return div().flex_none().child(neon(this, cx, `tab-${c.id}`, el, { on: c.active, radius: 10, spread: 9, full: false, gloss: true }));
     };
     return h_flex().id("q-tabs").relative().size_full().min_w(0).px(18).gap(6).items_end()
       .on_size_change((size, cx) => {
@@ -320,12 +330,13 @@ export default class Quantum extends View {
           this.tabsW = size.width; this.tabsH = size.height; cx.notify();
         }
       })
+      .child(div().absolute().left(5).right(5).top(3).h(80).rounded(16).bg("#070a26d0").border(1).border_color("#5a5cd099"))
       .when(Boolean(cardTop), (el) => el.child(cardTop))
       .on_scroll_wheel((e) => { if (Math.abs(e.delta.y) >= 1) run(e.delta.y > 0 ? "tab.prev" : "tab.next"); })
       .child(shape(h_flex().id("q-grid").cursor_pointer().hover((x) => x.text_color(C.text)), false).px(10)
         .on_mouse_down("left", stop).on_click(() => run("mod.open", { name: "picker" })).child(icon("grid", 15, C.muted)))
       .child(h_flex().id("q-tab-scroll").min_w(0).h_full().items_end().gap(6).overflow_x_scrollbar().children(shown.map(pill)))
-      .child(div().id("q-tab-new").mb(4).size(28).flex_none().flex().items_center().justify_center().rounded(8).text_size(17).text_color(C.muted)
+      .child(div().id("q-tab-new").mb(7).size(28).flex_none().flex().items_center().justify_center().rounded(8).text_size(17).text_color(C.muted)
         .hover((x) => x.bg("#ffffff12").text_color(C.text)).on_mouse_down("left", stop)
         .on_click(() => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })).child("+"))
       .child(div().flex_1());
@@ -339,7 +350,7 @@ export default class Quantum extends View {
     const W = Math.round(this.tabsW ?? 0), T = Math.round(this.tabsH ?? 40), bodyH = shared("quantum.bodyH");
     if (!W || !bodyH) return null;
     const H = bodyH - T, SP = 12;
-    const rel = ensurePic(cx, `v10-card-${W}x${H}.svg`, () => cardSvg(W, H, { radius: 18, spread: SP }));
+    const rel = ensurePic(cx, `v12-card-${W}x${H}.svg`, () => cardSvg(W, H, { radius: 18, spread: SP }));
     if (!rel) return null;
     const cur = shared("quantum.card");
     if (!cur || cur.rel !== rel) cx.spawn(async () => setShared("quantum.card", { W, H, SP, rel }));
@@ -375,7 +386,8 @@ export default class Quantum extends View {
         .child(div().relative().size(18).flex_none().child(halo("cyan", 44, 9, 9, bright ? 0.7 : 0.35)).child(icon(ic, 18, C.cyan)))
         .child(div().flex_1().text_size(14.5).font_semibold().text_color("#ffffff").child(title))
         .when(Boolean(extra), (el) => el.child(extra)));
-    const wrap = (key, el, bright) => div().px(10).child(neon(this, cx, key, el, { radius: 14, spread: 10, strength: bright ? 1 : 0.7 }));
+    const wrap = (key, el, bright, fill = false) => div().px(7).when(fill, (d) => d.flex_1().min_h(0))
+      .child(neon(this, cx, key, fill ? el.h_full() : el, { radius: 14, spread: 10, strength: bright ? 1 : 0.9, tall: fill }));
 
     const row = (ic, label, value, valueIcon) => h_flex().gap(10).items_center().text_size(12.8)
       .child(icon(ic, 13, C.dim))
@@ -391,6 +403,7 @@ export default class Quantum extends View {
         .child(row("list", "Project", short(pane?.cwd) || space?.name, svg("mods/workspace-chrome/folder.svg").size(14).text_color(C.cyan)))
         .child(row("layers", "Workspace", `${space?.name ?? ""} · ${space?.machine ?? "This computer"}`))
         .when(Boolean(pane?.branch), (el) => el.child(row("activity", "Branch", pane.branch, svg("mods/workspace-chrome/git-branch.svg").size(13).text_color(C.violet))))
+        .child(row("grid", "Mode", s.model ? s.mode ?? "default" : "", div().w(14).flex_none().text_size(13).text_color(C.amber).child("⚡")))
         .child(row("cpu", "Model", s.model ? `${s.model}${s.effort ? ` (${s.effort})` : ""}` : ""))
         .child(row("clock", "Started", ago(tab?.working_since ?? tab?.changed_at, true)))
         .child(row("ram", "Tokens", s.up ? `↑ ${s.up}   ↓ ${s.down}` : ""))
@@ -406,21 +419,22 @@ export default class Quantum extends View {
       .children((s.commands ?? []).map((c, i) => {
         const live = i === 0 && working;
         const line = h_flex().id(`q-cmd-${i}`).px(8).py(5).gap(9).items_center().rounded(8).text_size(12.5)
-          .when(live, (el) => el.bg("#1b2a7a88").border(1).border_color("#00000000"))
-          .child(live ? div().w(13).flex_none().text_color(C.cyan).frames(SPIN, 90).child("⠋") : icon("check", 13, C.green))
+          .when(live, (el) => el.bg("#16205aaa").border(1).border_color("#00000000"))
+          .child(live ? div().w(13).flex_none().flex().items_center().justify_center().child(div().size(7).rounded_full().bg(C.cyan)) : icon("check", 13, C.green))
           .child(div().flex_1().truncate().font_family("JetBrains Mono").text_color(i === 0 ? "#ffffff" : C.muted).child(c));
         return neon(this, cx, `cmd-${i}`, line, { on: live, radius: 8, spread: 7, tone: "cyan"});
       }));
 
-    const out = card("q-out", "Run Output", "list")
+    const out = card("q-out", "Run Output", "list", a ? div().id("q-out-open").text_size(15).text_color(C.muted).cursor_pointer()
+      .hover((x) => x.text_color("#ffffff")).on_click(() => run("pane.focus", { pane: a.pane })).child("⤢") : null).overflow_hidden()
       .child(v_flex().gap(4).font_family("JetBrains Mono").text_size(11.5)
         .when(!s.output?.length, (el) => el.child(div().text_color(C.dim).child("›  waiting for output…")))
         .children((s.output ?? []).map((l, i) => h_flex().gap(8)
           .child(div().flex_none().text_color(C.violet).child("›"))
           .child(div().flex_1().truncate().text_color(i === s.output.length - 1 ? "#ffffff" : C.muted).child(l.trim())))));
 
-    return v_flex().size_full().gap(12).overflow_y_scrollbar().pt(6).pb(6)
-      .child(wrap("run", runCard, true)).child(wrap("cmds", cmds)).child(wrap("out", out));
+    return v_flex().size_full().gap(12).pt(4).pb(8)
+      .child(wrap("run", runCard, true)).child(wrap("cmds", cmds)).child(wrap("out", out, false, true));
   }
 
   // ------------------------------------------------------------ pane header
@@ -441,12 +455,12 @@ export default class Quantum extends View {
         else { run("layout.select", { stack: "panel-body", child: id }); run("layout.show", { id: "panel" }); }
       }, on);
     };
-    return h_flex().id(`q-ph-${pane}`).size_full().px(14).gap(9).items_center().rounded_t(12).bg("#1a1f5acc").border_b(1).border_color("#8b6cff55")
+    return h_flex().id(`q-ph-${pane}`).size_full().px(14).gap(9).items_center().rounded_t(12).bg("#121842f0").border_b(1).border_color("#3a40a0aa")
       .text_size(12.5).on_click(() => run("pane.focus", { pane }))
       .child(programIcon(me.program, 15) ?? icon("terminal", 15, C.muted))
       .child(div().flex_none().max_w(260).truncate().font_semibold().text_color("#ffffff").child(name))
       .child(div().flex_1().min_w(0).truncate().text_color(C.dim).child(short(me.cwd)))
-      .when(me.status === "working", (el) => el.child(svg("mods/workspace-chrome/spinner.svg").size(13).flex_none().text_color(C.cyan).spin(900)))
+      .when(me.status === "working", (el) => el.child(div().size(12).flex_none().rounded_full().border(2).border_color(C.amber)))
       .when(me.status === "blocked", (el) => el.child(div().px(7).h(18).flex().items_center().rounded(6).bg(C.amber + "26").text_size(11).font_semibold().text_color(C.amber).child("Needs you")))
       .when(me.status === "done", (el) => el.child(div().size(7).rounded_full().bg(C.green)))
       .child(btn(`q-ph-split-${pane}`, h_flex().gap(5).items_center().child(div().text_size(15).child("+")), () => run("pane.split", { direction: "right", pane })))
@@ -462,16 +476,17 @@ export default class Quantum extends View {
     const seg = (id, child, ic, label) => {
       const on = active === child;
       const el = h_flex().id(id).w_full().h(36).gap(8).justify_center().items_center().rounded(10).text_size(13)
-        .when(on, (e) => e.bg("#2a2384ee").border(1).border_color("#00000000").font_semibold().text_color("#ffffff"))
+        .when(on, (e) => e.border(1).border_color("#00000000").font_semibold().text_color("#ffffff"))
         .when(!on, (e) => e.border(1).border_color("#00000000").text_color("#dfe4ff").cursor_pointer().hover((x) => x.bg("#ffffff10").text_color("#ffffff")))
         .on_click(() => run("layout.select", { stack: "side-body", child }))
         .child(ic).child(label);
-      return div().flex_1().child(neon(this, cx, id, el, { on, radius: 10, spread: 4, gloss: true }));
+      return div().flex_1().child(neon(this, cx, id, el, { on, radius: 10, spread: 8, gloss: true }));
     };
-    const header = h_flex().w_full().p(6).gap(6).items_center().rounded(14).bg(C.glass).border(1).border_color("#8b6cff55")
+    const header = h_flex().w_full().p(5).gap(6).items_center().rounded(13).bg("#060920dd").border(1).border_color("#3c40a088")
       .child(seg("q-seg-session", "side-session", icon("activity", 15, C.cyan), "Session"))
-      .child(seg("q-seg-tasks", "side-tasks", icon("list", 15, "#dfe4ff"), "Tasks"));
-    return div().size_full().px(16).pt(10).child(header);
+      .child(seg("q-seg-tasks", "side-tasks", icon("check", 15, "#dfe4ff"), "Tasks"))
+      .child(seg("q-seg-files", "side-files", svg("mods/files/file.svg").size(15).text_color("#dfe4ff"), "Files"));
+    return div().size_full().px(9).pt(9).child(header);
   }
 
   // ------------------------------------------------------------ status bar
@@ -499,6 +514,6 @@ export default class Quantum extends View {
       .child(h_flex().id("q-palette").gap(8).items_center().cursor_pointer().text_color(C.muted)
         .hover((x) => x.text_color("#ffffff")).on_click(() => run("app.palette"))
         .child(icon("terminal", 15, C.lilac)).child("commands"));
-    return div().id("q-status").size_full().px(14).py(5).child(neon(this, cx, "statusbar", div().size_full().rounded(17).bg("#0b0e30a8").child(content), { radius: 17, spread: 6, strength: 0.75, fill: true, tall: true }));
+    return div().id("q-status").size_full().px(14).py(5).child(neon(this, cx, "statusbar", div().size_full().rounded(17).bg("#05071e66").child(content), { radius: 17, spread: 8, strength: 1, fill: true, tall: true }));
   }
 }
