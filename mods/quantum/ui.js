@@ -200,11 +200,10 @@ export function barSvg(w, h, pct, lit) {
     + `<circle cx="${s + fw - h / 2}" cy="${s + h / 2}" r="${h * 0.22}" fill="#ffffff" opacity="0.9"/></svg>`;
 }
 
-export function barPic(cx, w, h, pct, lit) {
-  const p = Math.round(pct);
-  const rel = ensurePic(cx, `v3-bar-${w}x${h}-${p}-${lit ? 1 : 0}.svg`, () => barSvg(w, h, p, lit));
-  const box = div().relative().w(w).h(h);
-  return rel ? box.child(image(rel).absolute().left(-8).top(-8).w(w + 16).h(h + 16)) : box.rounded(h / 2).bg("#ffffff14");
+export function barPic(_cx, w, h, pct) {
+  const n = 40, filled = Math.round((Math.max(0, Math.min(100, pct)) / 100) * n);
+  return h_flex().w(w).h(h).bg("#ffffff14").children(
+    Array.from({ length: filled }, (_, i) => div().h_full().w(w / n).flex_none().bg(mix(C.cyan, C.violet, i / (n - 1)))));
 }
 
 // The frame picture for an element of `size`, positioned over it (the parent must be
@@ -223,34 +222,17 @@ function framePic(cx, size, opts) {
 
 // `el` (rounded `radius`) with a neon frame when `on`. `view.sizes` keeps measured sizes;
 // `key` must be unique in the mod copy.
-export function neon(view, cx, key, el, { on = true, radius = 12, tone = "violet", spread = 10, strength = 1, full = true, gloss = false, fill = false, tall = false, outer = 1, inner = false } = {}) {
-  const box = div().id(`nz-${key}`).relative().when(full, (d) => d.w_full()).when(tall, (d) => d.h_full())
-    .on_size_change((size, cx) => {
-      const old = view.sizes[key];
-      if (!old || Math.round(old.width) !== Math.round(size.width) || Math.round(old.height) !== Math.round(size.height)) {
-        view.sizes[key] = size; cx.notify();
-      }
-    });
-  // Selected items light up blue, as the design's do.
-  const pic = on ? framePic(cx, view.sizes[key], { radius, tone: gloss && tone === "violet" ? "blue" : tone, spread, strength, gloss, fill, outer, inner }) : null;
-  // A selected item's picture carries its fill, so it goes behind; a plain frame goes over.
-  if (!pic) return box.child(el);
-  return gloss ? box.child(pic).child(el) : box.child(el).child(pic);
+// Square frames: a 1px border, no pictures (cheap to draw).
+const EDGE = { violet: "#8b7bffcc", cyan: "#4fd8ffcc", green: "#4ef0a6cc", amber: "#ffb547cc", tab: "#6fa8ffcc", seg: "#4fd8ffcc", card: "#4a58b8aa", panel: "#4a58b8aa" };
+export function neon(_view, _cx, key, el, { on = true, tone = "violet", full = true, tall = false } = {}) {
+  return div().id(`nz-${key}`).when(full, (d) => d.w_full()).when(tall, (d) => d.h_full())
+    .border(1).border_color(on ? (EDGE[tone] ?? EDGE.violet) : "#00000000").child(el);
 }
 
-// A glass panel filling its block, framed in neon. Leaves `margin` px around it for the light.
-export function panel(view, cx, key, content, { radius = 18, tone = "panel", strength = 1, margin = 10, pad = 0, id } = {}) {
-  const box = div().size_full().rounded(radius).bg(C.glass).overflow_hidden().p(pad).child(content);
-  const inner = div().id(`pz-${key}`).relative().size_full()
-    .on_size_change((size, cx) => {
-      const old = view.sizes[key];
-      if (!old || Math.round(old.width) !== Math.round(size.width) || Math.round(old.height) !== Math.round(size.height)) {
-        view.sizes[key] = size; cx.notify();
-      }
-    })
-    .child(box);
-  const pic = framePic(cx, view.sizes[key], { radius, tone, spread: margin, strength });
-  const out = div().size_full().p(margin).child(pic ? inner.child(pic) : inner);
+// A panel filling its block: slightly translucent glass with a thin square border.
+export function panel(_view, _cx, key, content, { margin = 6, id } = {}) {
+  const out = div().size_full().p(margin).child(
+    div().id(`pz-${key}`).size_full().bg("#0b1236b8").border(1).border_color(EDGE.panel).overflow_hidden().child(content));
   return id ? out.id(id) : out;
 }
 
@@ -273,9 +255,9 @@ export function programIcon(p, size, color = C.text) {
 export function bar(pct, w, { h = 8 } = {}) {
   const n = 30, seg = w / n, filled = Math.max(1, Math.round((Math.max(0, Math.min(100, pct)) / 100) * n));
   const fw = Math.round(filled * seg);
-  const fill = h_flex().w(fw).h(h).rounded(h / 2).overflow_hidden().children(
+  const fill = h_flex().w(fw).h(h).overflow_hidden().children(
     Array.from({ length: filled }, (_, i) => div().h_full().flex_1().bg(mix(C.cyan, C.violet, i / (n - 1)))));
-  return { fill, fw, track: (inner) => div().w(w).h(h).rounded(h / 2).bg("#ffffff12").child(inner) };
+  return { fill, fw, track: (inner) => div().w(w).h(h).bg("#ffffff12").child(inner) };
 }
 
 const TILES = ["#22c55e", "#f97316", "#6d7cff", "#a855f7", "#16a34a", "#ec4899", "#14b8a6", "#3b82f6", "#eab308", "#ef4444"];
@@ -287,7 +269,7 @@ export function tileColor(name) {
 
 export function letterTile(name, size = 20) {
   const ch = (name || "?").replace(/^[^\p{L}\p{N}]+/u, "").charAt(0).toUpperCase() || "?";
-  return div().size(size).flex_none().rounded(5).bg(tileColor(name)).flex().items_center().justify_center()
+  return div().size(size).flex_none().bg(tileColor(name)).flex().items_center().justify_center()
     .text_size(size * 0.6).font_bold().text_color("#ffffff").child(ch);
 }
 

@@ -84,7 +84,7 @@
               "id": "tabs",
               "type": "block",
               "size": {
-                "px": 53
+                "px": 40
               },
               "window_drag": true,
               "content": {
@@ -95,136 +95,81 @@
               }
             },
             {
-              "id": "card",
-              "type": "column",
+              "id": "work-body",
+              "type": "row",
               "padding": 0,
+              "gap": 0,
+              "background": "#0b1236b8",
+              "border": {
+                "width": 1,
+                "color": "#4a58b8aa"
+              },
               "resizable": false,
               "children": [
                 {
-                  "id": "card-mid",
-                  "type": "row",
-                  "resizable": false,
+                  "id": "main",
+                  "type": "block",
+                  "content": {
+                    "tab": "active",
+                    "pane": {
+                      "gap": 8,
+                      "radius": 0,
+                      "background": "#00000000",
+                      "lone": true,
+                      "border": {
+                        "width": 1,
+                        "color": "#00000000"
+                      },
+                      "focus": {
+                        "width": 1,
+                        "color": "#4fd8ff88"
+                      },
+                      "header": {
+                        "content": {
+                          "mod": "quantum",
+                          "props": {
+                            "role": "pane"
+                          }
+                        },
+                        "height": 38,
+                        "position": "top",
+                        "reveal": "always"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "panel",
+                  "type": "column",
+                  "hidden": true,
+                  "size": {
+                    "px": 368
+                  },
+                  "min": 280,
+                  "max": 900,
                   "children": [
                     {
-                      "id": "edge-left",
-                      "type": "block",
-                      "size": {
-                        "px": 14
-                      },
-                      "resizable": false,
-                      "content": {
-                        "mod": "quantum",
-                        "props": {
-                          "role": "edge",
-                          "side": "left"
-                        }
-                      }
-                    },
-                    {
-                      "id": "work-body",
-                      "type": "row",
-                      "padding": 0,
-                      "gap": 8,
+                      "id": "panel-body",
+                      "type": "stack",
+                      "active": "files",
                       "children": [
                         {
-                          "id": "main",
+                          "id": "files",
                           "type": "block",
                           "content": {
-                            "tab": "active",
-                            "pane": {
-                              "gap": 8,
-                              "radius": 0,
-                              "background": "#00000000",
-                              "lone": true,
-                              "border": {
-                                "width": 0,
-                                "color": "#00000000"
-                              },
-                              "focus": {
-                                "width": 0,
-                                "color": "#00000000"
-                              },
-                              "header": {
-                                "content": {
-                                  "mod": "quantum",
-                                  "props": {
-                                    "role": "pane"
-                                  }
-                                },
-                                "height": 38,
-                                "position": "top",
-                                "reveal": "always"
-                              }
-                            }
+                            "mod": "files"
                           }
                         },
                         {
-                          "id": "panel",
-                          "type": "column",
-                          "hidden": true,
-                          "size": {
-                            "px": 368
-                          },
-                          "min": 280,
-                          "max": 900,
-                          "children": [
-                            {
-                              "id": "panel-body",
-                              "type": "stack",
-                              "active": "files",
-                              "children": [
-                                {
-                                  "id": "files",
-                                  "type": "block",
-                                  "content": {
-                                    "mod": "files"
-                                  }
-                                },
-                                {
-                                  "id": "changes",
-                                  "type": "block",
-                                  "content": {
-                                    "mod": "changes"
-                                  }
-                                }
-                              ]
-                            }
-                          ]
+                          "id": "changes",
+                          "type": "block",
+                          "content": {
+                            "mod": "changes"
+                          }
                         }
-                      ],
-                      "background": "#0b1131"
-                    },
-                    {
-                      "id": "edge-right",
-                      "type": "block",
-                      "size": {
-                        "px": 14
-                      },
-                      "resizable": false,
-                      "content": {
-                        "mod": "quantum",
-                        "props": {
-                          "role": "edge",
-                          "side": "right"
-                        }
-                      }
+                      ]
                     }
                   ]
-                },
-                {
-                  "id": "edge-bottom",
-                  "type": "block",
-                  "size": {
-                    "px": 14
-                  },
-                  "resizable": false,
-                  "content": {
-                    "mod": "quantum",
-                    "props": {
-                      "role": "edge",
-                      "side": "bottom"
-                    }
-                  }
                 }
               ]
             }
@@ -277,17 +222,6 @@
                   ],
                   "content": {
                     "mod": "task-board"
-                  }
-                },
-                {
-                  "id": "side-files",
-                  "type": "block",
-                  "padding": [
-                    6,
-                    10
-                  ],
-                  "content": {
-                    "mod": "files"
                   }
                 }
               ]
