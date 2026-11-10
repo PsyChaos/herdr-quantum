@@ -13,13 +13,12 @@
 import { View, div, svg, image } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
 import {
-  agents, spaces, panes, focused, terminals, machines, layout, shared, setShared,
+  agents, spaces, panes, focused, terminals, machines, layout,
   run, props, hc, exec, readTextFile, keys, window, home, appHome, openOverlay, closeOverlay,
 } from "herdr";
-import { A, C, SPIN, CARD, neon, panel, barPic, ensurePic, cardSvg, halo, icon, programIcon, bar, letterTile, statusMark, ago } from "./ui.js";
+import { A, C, CARD, STATUS, neon, panel, barPic, halo, icon, programIcon, letterTile, statusMark, ago } from "./ui.js";
 
 const stop = (_e, cx) => cx.stop_propagation();
-const TAB_ROW = 40; // the tab bar's tab row: the tabs stand on the shell's top edge at its bottom
 
 function find(node, id) {
   if (node?.id === id) return node;
@@ -102,7 +101,6 @@ export default class Quantum extends View {
     this.screen = {};
     this.cpu = null; this.ram = null; this.prevCpu = null;
     this.folded = new Set();
-    this.sizes = {};
     if (this.role === "session" || this.role === "status") {
       this.refresh(cx);
       cx.timer.every(this.role === "session" ? 4000 : 5000, (cx) => this.refresh(cx));
@@ -202,7 +200,7 @@ export default class Quantum extends View {
           .child(image(`${A}/logo.svg`).size(42)))
         .child(div().text_size(25).font_bold().text_color("#ffffff").child("Herdr")))
       // equal flex_1 sides keep the search field centred in the window
-      .child(div().w(640).flex_none().child(neon(this, cx, "search", search, { radius: 19, spread: 12 })))
+      .child(div().w(640).flex_none().child(neon("search", search)))
       .child(h_flex().flex_1().min_w(0).gap(16).items_center().justify_end()
       .child(btn("q-bell", div().relative().size(20)
         .child(icon("bell", 20, C.muted))
@@ -253,7 +251,7 @@ export default class Quantum extends View {
         .child(div().flex_none().max_w(150).truncate().text_size(13).text_color(s.active ? "#ffffff" : C.text).font_medium().child(s.name))
         .when(s.status && s.status !== "idle", (el) => el.child(statusMark(s.status, 12)))
         .child(div().flex_1().min_w(0).text_right().truncate().text_size(11.5).text_color(s.active ? "#c8ccef" : C.dim).child(right));
-      return div().px(10).py(1).child(neon(this, cx, `sp-${s.id}`, row, { on: s.active, radius: 9, spread: 6, gloss: true, outer: 0.5 }));
+      return div().px(10).py(1).child(neon(`sp-${s.id}`, row, { on: s.active }));
     };
 
     const machineRow = (m) => {
@@ -335,7 +333,7 @@ export default class Quantum extends View {
           .child(folded ? `› ${subs.length}` : "⌄")))
         .child(div().w(24).flex_none().text_right().text_size(11).text_color(C.dim).child(ago(tabOf(a)?.changed_at)))
         .child(statusMark(a.status, 13));
-      const wrapped = div().px(10).py(1).child(neon(this, cx, `ag-${a.address}`, row, { on: hot, radius: 9, spread: 6, strength: a.focused ? 1 : 0.75, gloss: true, outer: 0.5 }));
+      const wrapped = div().px(10).py(1).child(neon(`ag-${a.address}`, row, { on: hot }));
       return [wrapped, ...(folded ? [] : subs.flatMap((k) => subRow(k, 1, new Set([a.address, ...subs.map((x) => x.address)]))))];
     };
 
@@ -364,7 +362,7 @@ export default class Quantum extends View {
         ])))
       .child(div().mx(14).my(6).h(1).bg("#8b6cff33"))
       .child(foot("q-add-machine", "plus", "Add machine", () => run("mod.open", { name: "machine-add" })));
-    return panel(this, cx, "sidebar", content, { id: "q-sidebar", margin: 0 });
+    return panel("sidebar", content, { id: "q-sidebar", margin: 0 });
   }
 
   // ------------------------------------------------------------ tabs
@@ -386,7 +384,7 @@ export default class Quantum extends View {
         .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "menu", kind: "popup", width: 200, props: { tab: "tab", target: { id: c.id, space: space.id } } }); })
         .when(Boolean(pic), (el) => el.child(pic))
         .child(div().max_w(170).truncate().font_medium().child(c.zoomed ? `${name} ⤢` : name))
-        .when(!c.active && c.status && c.status !== "idle", (el) => el.child(div().size(6).rounded_full().bg({ working: C.cyan, blocked: C.amber, done: C.green }[c.status])))
+        .when(!c.active && c.status && c.status !== "idle", (el) => el.child(div().size(6).rounded_full().bg(STATUS[c.status] ?? C.dim)))
         .when(c.active, (el) => el.child(div().id(`q-tabx-${c.id}`).text_color(C.muted).hover((x) => x.text_color("#ffffff"))
           .on_mouse_down("left", stop).on_click((_e, cx) => { cx.stop_propagation(); run("tab.close", { id: c.id }); })
           .child(svg("mods/pane/close.svg").size(12))));
@@ -409,7 +407,7 @@ export default class Quantum extends View {
     const tab = space?.tabs.find((t) => t.id === a?.tab);
     const pane = a ? panes().find((p) => p.pane === a.pane) : null;
     const working = a?.status === "working";
-    const sc = { working: C.cyan, blocked: C.amber, done: C.green, idle: C.dim }[a?.status] ?? C.dim;
+    const sc = STATUS[a?.status] ?? C.dim;
     const st = { working: "Running", blocked: "Needs you", done: "Done", idle: "Idle" }[a?.status] ?? "No agent";
 
     const card = (id, title, ic, extra, bright = false, rule = false) => v_flex().id(id).w_full().px(14).pt(12).pb(12).gap(7).bg(C.card)
@@ -418,8 +416,8 @@ export default class Quantum extends View {
         .child(div().flex_1().text_size(14).font_semibold().text_color("#ffffff").child(title))
         .when(Boolean(extra), (el) => el.child(extra)))
       .when(rule, (el) => el.child(div().mt(2).mb(3).h(1).bg("#24306a")));
-    const wrap = (key, el, bright, fill = false) => div().when(fill, (d) => d.flex_1().min_h(0))
-      .child(neon(this, cx, key, fill ? el.h_full() : el, { radius: 12, spread: 6, tone: "card", strength: bright ? 1 : 0.9, outer: 0.2, inner: true, tall: fill }));
+    const wrap = (key, el, fill = false) => div().when(fill, (d) => d.flex_1().min_h(0))
+      .child(neon(key, fill ? el.h_full() : el, { tone: "card", tall: fill }));
 
     const row = (ic, label, value, valueIcon) => h_flex().h(16).gap(9).items_center().text_size(12.3)
       .child(icon(ic, 13, C.dim))
@@ -444,8 +442,8 @@ export default class Quantum extends View {
         .when(s.left != null, (el) => el.child(v_flex().gap(6).pt(6)
           .child(div().text_size(12).text_color(C.muted).child(working ? `${s.doing?.verb ?? "Thinking…"}${s.effort ? ` (${s.effort} effort)` : ""}` : "Context left"))
           .child(h_flex().gap(10).items_center()
-            .child(barPic(cx, Math.max(120, Math.round((this.sizes.run?.width ?? 320) - 28 - 46)), 9, s.left, working))
-            .child(div().flex_1().text_right().text_size(12.5).text_color("#ffffff").font_semibold().child(`${s.left}%`)))
+            .child(barPic(9, s.left))
+            .child(div().flex_none().w(40).text_right().text_size(12.5).text_color("#ffffff").font_semibold().child(`${s.left}%`)))
           .child(div().text_size(11).text_color(C.dim).child(`${s.used} of ${s.size}${s.l5 ? `  ·  limit 5h ${s.l5}% · 7d ${s.l7}%` : ""}`)))));
 
     const cmds = card("q-cmds", "Recent Commands", "terminal")
@@ -473,9 +471,9 @@ export default class Quantum extends View {
           .child(div().flex_none().text_color(C.violet).child("›"))
           .child(div().flex_1().truncate().text_color(i === lines.length - 1 ? "#ffffff" : C.muted).child(l.trim())))));
 
-    if (big) return v_flex().size_full().child(wrap("out", out, false, true));
+    if (big) return v_flex().size_full().child(wrap("out", out, true));
     return v_flex().size_full().gap(10)
-      .child(wrap("run", runCard, true)).child(wrap("cmds", cmds)).child(wrap("out", out, false, true));
+      .child(wrap("run", runCard)).child(wrap("cmds", cmds)).child(wrap("out", out, true));
   }
 
   // ------------------------------------------------------------ pane header
@@ -501,7 +499,7 @@ export default class Quantum extends View {
       .child(programIcon(me.program, 15) ?? icon("terminal", 15, C.muted))
       .child(div().flex_none().max_w(260).truncate().font_semibold().text_color("#ffffff").child(name))
       .child(div().flex_1().min_w(0).truncate().text_color(C.dim).child(short(me.cwd)))
-      .when(me.status === "working", (el) => el.child(div().size(12).flex_none().rounded_full().border(2).border_color(C.amber)))
+      .when(me.status === "working", (el) => el.child(div().size(12).flex_none().rounded_full().border(2).border_color(STATUS.working)))
       .when(me.status === "blocked", (el) => el.child(div().px(7).h(18).flex().items_center().bg(C.amber + "26").text_size(11).font_semibold().text_color(C.amber).child("Needs you")))
       .when(me.status === "done", (el) => el.child(div().size(7).rounded_full().bg(C.green)))
       .child(btn(`q-ph-split-${pane}`, h_flex().gap(5).items_center().child(div().text_size(15).child("+")), () => run("pane.split", { direction: "right", pane })))

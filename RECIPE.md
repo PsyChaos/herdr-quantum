@@ -110,8 +110,8 @@ shows through every panel and every terminal.
          ⚡; auto, accept edits, plan, bypass or default), Model ("Opus 5.5 (medium)"), Started
          ("4m 12s ago"), Tokens ("↑ 320k   ↓ 4k"). With no agent: "Focus an agent's pane to
          see its run." When the screen shows a context figure: a 12px label (the live verb such
-         as "Doing… (medium effort)" while working, else "Context left"), a 246 × 9px bar of 40
-         segments shading cyan to violet over a `#ffffff14` track, filled to the percent of
+         as "Doing… (medium effort)" while working, else "Context left"), a 9px bar filling the row
+         (40 equal segments) shading cyan to violet over a `#ffffff14` track, filled to the percent of
          context left, that percent at the right (12.5px semibold white), and "320k of 1.0M ·
          limit 5h 34% · 7d 31%" (11px dim).
        - **Recent Commands** (terminal icon): the last six `Bash(...)` commands on the agent's
@@ -141,7 +141,7 @@ plus the machine for a remote agent (11px), the time since the change, and a 13p
 Newest first in each section. With nothing to show: "No notifications" centred in 60px. The
 popup is as tall as its rows, at most 470px, and scrolls beyond that.
 
-**Status marks** (sidebar, space rows, bell rows): working, a 2px amber ring; blocked, an amber
+**Status marks** (sidebar, space rows, bell rows): working, a 2px cyan ring; blocked, an amber
 disc with a dark "!" (`#1a1030`); done, a small green disc (55% of the mark's size); idle, a dim
 thin ring.
 
@@ -154,8 +154,8 @@ blue, violet and cyan.
 
 **Agent status, everywhere it shows:**
 
-- **working:** amber ring in the sidebar and space row; listed under "Working" with the violet
-  border; a cyan dot on its tab when that tab isn't active; a 12px amber ring in its pane
+- **working:** cyan ring in the sidebar and space row; listed under "Working" with the violet
+  border; a cyan dot on its tab when that tab isn't active; a 12px cyan ring in its pane
   header; the cyan "Running" pill; the newest command highlighted with a cyan dot; the context
   label shows the live verb from the agent's screen ("Doing…", by default "Thinking…"); the
   status bar counts it ("· 1 working") and its dot turns cyan.
@@ -353,16 +353,8 @@ only when task-board is installed and not yet in the layout). No network.
   `extras/claude-statusline.sh` (`%68` with the sign first, limits labelled `5s`/`7g`, shown as
   5h/7d), Mode, Model and Tokens show "—" and the context bar and the status bar's tokens are
   hidden. Only Claude Code's screen layout is parsed.
-- **Working is amber in the marks** (sidebar, space rows, pane-header ring) but cyan in the
-  group label, tab dots, the pill and the status bar: that is how this build draws it.
-- **Dead code a fresh build doesn't need.** In `ui.js`: `frameSvg`, `TONES`, `framePic`,
-  `ensurePic` (with its `fs` import and the `.glow/` folder, still in `.gitignore`), `cardSvg`,
-  `barSvg`, `bar`, `SPIN`, the colours `glass`, `line`, `lineHi`, `pink`, most of `CARD` (only
-  `band` and `rule` are used), and `neon`'s `radius`, `spread`, `strength`, `gloss`, `outer` and
-  `inner` options (ignored). In `main.js`: the imports `SPIN`, `ensurePic`, `cardSvg`, `bar`,
-  `shared`, `setShared`, the constant `TAB_ROW`, and `this.sizes` (never filled, so the context
-  bar is always 246px); `barPic` ignores its fifth argument. `halo-amber.png` and
-  `halo-green.png` are unused. No glow pictures are drawn any more.
+- **One set of status colours** (`STATUS` in `ui.js`): working cyan, blocked amber, done green,
+  idle dim, used by the marks, tab dots, the pill and the pane header alike.
 - Limits: 6 commands, 7 output lines (60 grown), bell popup 470px tall, space name 150px, tab
   name 170px, pane name 260px. The orb, the logo and the Agents clock icon are decoration.
 

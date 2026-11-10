@@ -1,6 +1,6 @@
-# Generates mods/quantum/space.jpg (via rsvg-convert):
+# Generates mods/quantum/nebula-deep.jpg (via rsvg-convert):
 #   python3 art/nebula.py > nebula.svg && rsvg-convert nebula.svg -o nebula.png
-#   magick nebula.png -quality 90 mods/quantum/space.jpg
+#   magick nebula.png -quality 90 mods/quantum/nebula-deep.jpg
 # Near-black deep navy; colour only where the panels don't cover it: the title band and the
 # ringed planet at the top, the window's right edge, the lower corners and the giant planet
 # rising behind the status bar.
