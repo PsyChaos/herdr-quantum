@@ -1,0 +1,146 @@
+{
+  "id": "root",
+  "type": "column",
+  "titlebar": "none",
+  "traffic_lights": [18, 22],
+  "preview": "mods/quantum/preview.png",
+  "theme": "quantum",
+  "colors": {
+    "canvas": "#00000000",
+    "chrome": "#0c0f34b8",
+    "surface": "#11154299",
+    "background": "#090b26",
+    "border": "#5d63d855",
+    "input": "#8b6cffaa",
+    "hover": "#ffffff12",
+    "selected": "#3a3fb0aa",
+    "raised": "#1a1f5acc",
+    "popover": "#10133ff2",
+    "muted": "#a3a9e0",
+    "dim": "#6d73b3"
+  },
+  "terminal_padding": [14, 12],
+  "terminal_opacity": 0.86,
+  "background": { "image": "mods/quantum/nebula.jpg", "fit": "cover" },
+  "padding": [8, 10],
+  "gap": 8,
+  "children": [
+    {
+      "id": "top",
+      "type": "block",
+      "size": { "px": 52 },
+      "window_drag": true,
+      "content": { "mod": "quantum", "props": { "role": "top" } }
+    },
+    {
+      "id": "body",
+      "type": "row",
+      "gap": 10,
+      "resizable": true,
+      "children": [
+        {
+          "id": "sidebar",
+          "type": "column",
+          "size": { "px": 268 },
+          "min": 44,
+          "max": 480,
+          "background": "chrome",
+          "radius": 16,
+          "border": { "width": 1, "color": "#6f74f066" },
+          "shadow": "lg",
+          "padding": [8, 0],
+          "resizable": false,
+          "children": [
+            {
+              "id": "sidebar-lists",
+              "type": "column",
+              "children": [
+                { "id": "spaces", "type": "block", "size": { "weight": 1 }, "min": 90, "content": { "mod": "spaces" } },
+                { "id": "agents", "type": "block", "size": { "weight": 1 }, "min": 90, "content": { "mod": "agents" } }
+              ]
+            },
+            {
+              "id": "sidebar-footer",
+              "type": "block",
+              "size": { "px": 69 },
+              "content": { "mod": "workspace-chrome", "props": { "footer": true } }
+            }
+          ]
+        },
+        {
+          "id": "work",
+          "type": "column",
+          "background": "#0b0e30a6",
+          "radius": 16,
+          "border": { "width": 1, "color": "#8b6cff88" },
+          "shadow": "lg",
+          "padding": 8,
+          "resizable": false,
+          "children": [
+            { "id": "tabs", "type": "block", "size": { "px": 42 }, "window_drag": true, "content": { "mod": "tabs" } },
+            {
+              "id": "work-body",
+              "type": "row",
+              "padding": 0,
+              "gap": 8,
+              "children": [
+                {
+                  "id": "main",
+                  "type": "block",
+                  "content": {
+                    "tab": "active",
+                    "pane": {
+                      "gap": 8,
+                      "radius": 12,
+                      "background": "background",
+                      "lone": true,
+                      "border": { "width": 1, "color": "#6f74f066" },
+                      "focus": { "width": 1, "color": "#4fd8ff" },
+                      "header": { "content": { "mod": "pane" }, "height": 32, "position": "top", "reveal": "always" }
+                    }
+                  }
+                },
+                {
+                  "id": "panel",
+                  "type": "column",
+                  "hidden": true,
+                  "size": { "px": 368 },
+                  "min": 280,
+                  "max": 900,
+                  "children": [
+                    {
+                      "id": "panel-body",
+                      "type": "stack",
+                      "active": "files",
+                      "children": [
+                        { "id": "files", "type": "block", "content": { "mod": "files" } },
+                        { "id": "changes", "type": "block", "content": { "mod": "changes" } }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "session",
+          "type": "block",
+          "size": { "px": 330 },
+          "min": 260,
+          "max": 520,
+          "content": { "mod": "quantum", "props": { "role": "session" } }
+        }
+      ]
+    },
+    {
+      "id": "status",
+      "type": "block",
+      "size": { "px": 38 },
+      "background": "chrome",
+      "radius": 14,
+      "border": { "width": 1, "color": "#6f74f066" },
+      "content": { "mod": "quantum", "props": { "role": "status" } }
+    }
+  ]
+}
