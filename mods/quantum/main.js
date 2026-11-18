@@ -86,10 +86,12 @@ function bellHeight(list, tabOf) {
   return Math.min(BELL.max, BELL.head + (n ? groups * BELL.label + n * BELL.row + 6 : BELL.empty) + 2);
 }
 
-// The Tasks tab shows the task-board mod (github.com/PsyChaos/herdr-mods) when it is
+// The Tasks tab shows Deck's agents tab (deck mod, github.com/PsyChaos/herdr-mods) when it is
 // installed. The shipped layout names only this mod there, because a layout naming a
-// missing mod is refused as a whole; once task-board is found, the block is switched to it.
-const BOARD = "task-board";
+// missing mod is refused as a whole; once deck is found, the block is switched to it.
+const BOARD = "deck"; // Deck's agents tab, shown alone (github.com/PsyChaos/herdr-mods)
+const BOARD_CONTENT = { mod: BOARD, props: { tab: "agents" } };
+const named = (block) => block?.content?.mod === BOARD && block.content.props?.tab === "agents";
 function withContent(node, id, content) {
   if (node?.id === id) return { ...node, content };
   return node?.children ? { ...node, children: node.children.map((c) => withContent(c, id, content)) } : node;
@@ -170,7 +172,7 @@ export default class Quantum extends View {
       case "pane": return this.pane(cx);
       case "sidetabs": return this.sidetabs(cx);
       case "bell": return this.bell(cx);
-      case "tasks": return div().size_full(); // stands in for task-board until it is found
+      case "tasks": return div().size_full(); // stands in for deck until it is found
       default: return this.session(cx);
     }
   }
@@ -544,7 +546,7 @@ export default class Quantum extends View {
         : div().h(BELL.empty).flex_none().flex().items_center().justify_center().text_size(12.5).text_color(C.muted).child("No notifications"));
   }
 
-  // Points the Tasks block at task-board once it is installed (the file is looked at every 30 s,
+  // Points the Tasks block at Deck's agents tab once it is installed (the file is looked at every 30 s,
   // the layout every 3 s), and leaves the Tasks tab when it is not.
   async syncBoard(cx) {
     if (this.syncing) return;
@@ -554,8 +556,8 @@ export default class Quantum extends View {
         this.board = (await readTextFile(`${appHome()}/mods/${BOARD}/mod.json`).catch(() => null)) != null;
       const root = layout();
       const block = find(root, "side-tasks");
-      if (this.board && block && block.content?.mod !== BOARD)
-        await exec("herdr-app", ["do", "layout.set", JSON.stringify({ layout: withContent(root, "side-tasks", { mod: BOARD }) })]).catch(() => null);
+      if (this.board && block && !named(block))
+        await exec("herdr-app", ["do", "layout.set", JSON.stringify({ layout: withContent(root, "side-tasks", BOARD_CONTENT) })]).catch(() => null);
       else if (!this.board && find(root, "side-body")?.active === "side-tasks")
         run("layout.select", { stack: "side-body", child: "side-session" });
       cx.notify();
@@ -577,7 +579,7 @@ export default class Quantum extends View {
           .child(ic).child(label))
         .child(div().h(2).w_full().bg(on ? C.cyan : "#00000000"));
     };
-    const tasks = find(layout(), "side-tasks")?.content?.mod === BOARD; // Tasks only with task-board installed
+    const tasks = named(find(layout(), "side-tasks")); // Tasks only with deck installed
     const header = h_flex().w_full().h(30).bg("#0b1236b8").border(1).border_color("#4a58b8aa")
       .child(seg("q-seg-session", "side-session", icon("activity", 14, active === "side-session" ? C.cyan : C.muted), "Session"))
       .when(tasks, (el) => el.child(div().w(1).h_full().bg("#4a58b8aa"))
