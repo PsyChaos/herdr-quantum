@@ -6,7 +6,7 @@ region floats over it as a square, translucent navy panel with a thin blue 1px b
 rounded except small status dots. Top to bottom: a title bar with a centred command search and a
 notification bell; then three columns: workspaces and agents on the left, the active tab's panes
 (each its own framed box) in the middle, and a live **Session** panel on the right (with a
-**Tasks** tab when the task-board mod is installed); then a status bar with machine, branch,
+**Tasks** tab when the deck mod is installed); then a status bar with machine, branch,
 agents, CPU, RAM and tokens.
 
 ![Quantum](preview.png)
@@ -95,7 +95,7 @@ shows through every panel and every terminal.
    - **Right column, 330px** (drag 260 to 520):
      - **Underline tabs**, a 30px framed strip (fill `#0b1236b8`, border `#4a58b8aa`) at the
        top of a 40px block (so 10px gap below). "Session" (activity icon) and, only when
-       task-board is installed, "Tasks" (check icon), equal halves split by a 1px `#4a58b8aa`
+       deck is installed, "Tasks" (check icon), equal halves split by a 1px `#4a58b8aa`
        line. The active one: white semibold 12.5px, a cyan 14px icon, a faint cyan fill
        `#4fd8ff12` and a 2px cyan bar along its bottom. The other: muted text and icon.
      - **Session**: three separate framed cards 10px apart. Card fill `#0b1432c8`, 14px side
@@ -122,7 +122,7 @@ shows through every panel and every terminal.
          agent's input box, 11.5px JetBrains Mono, each after a violet "›", truncated; the last
          line white, the others muted. Empty: "›  waiting for output…". A 24px "⤢" button at
          the top right.
-     - **Tasks**: the task-board mod in its own framed box (`#0b1236b8`, `#4a58b8aa` border).
+     - **Tasks**: Deck's agents tab (mod `deck`, props `{tab: "agents"}`) in its own framed box (`#0b1236b8`, `#4a58b8aa` border).
 
 3. **Status bar, 46px**: a 38px framed strip (fill `#0b123699`, border `#4a58b8aa`) 8px below
    the columns, 20px side padding, items 20px apart, 14px text, 1 × 16px `#8b6cff44`
@@ -200,7 +200,7 @@ tab; else the newest in the focused space; else none ("No agent").
 **What moves:** nothing animates. The Session panel re-reads the agent's screen every 4 s (not
 while Tasks is shown); the status bar re-reads the screen, CPU and RAM every 5 s (CPU appears
 from the second reading); the sidebar's "4m" labels refresh every 30 s. The Tasks tab appears
-within 30 s of installing task-board.
+within 30 s of installing deck.
 
 ## Built from
 
@@ -233,7 +233,7 @@ root column
 │     └─ side-body  stack, active "side-session"
 │        ├─ side-session block               quantum "session"
 │        └─ side-tasks   block, background #0b1236b8, border 1 #4a58b8aa
-│                                            quantum "tasks" (switched to mod "task-board")
+│                                            quantum "tasks" (switched to mod "deck", tab agents)
 └─ status     block 46px                     quantum "status"
 ```
 
@@ -274,12 +274,12 @@ terminal's.
 
 **Tasks tab.** The `sidetabs` copy runs `syncBoard` in `cx.spawn` at start and every 3 s; on
 the first run and every tenth (every 30 s) it checks for
-`${appHome()}/mods/task-board/mod.json` with `readTextFile`. When task-board exists and
+`${appHome()}/mods/deck/mod.json` with `readTextFile`. When deck exists and
 `side-tasks` doesn't name it, it runs
 `exec("herdr-app", ["do", "layout.set", JSON.stringify({ layout })])` with a copy of `layout()`
-whose `side-tasks.content` is `{ "mod": "task-board" }`. When it's missing and `side-tasks` is
+whose `side-tasks.content` is `{ "mod": "deck", "props": { "tab": "agents" } }`. When it's missing and `side-tasks` is
 showing, it selects `side-session`. The Tasks half of the switch is drawn only while
-`side-tasks` names task-board. task-board lives at github.com/PsyChaos/herdr-mods and is not
+`side-tasks` names deck. deck lives at github.com/PsyChaos/herdr-mods and is not
 shipped with Herdr.
 
 **Herdr functions:** `agents`, `terminals`, `spaces`, `panes`, `focused`, `machines`, `layout`,
@@ -307,7 +307,7 @@ wide with `{ tab: "tab", target: { id, space } }`; pane menu popup 220px wide wi
 `mods/files/file.svg`; `mods/changes/changes.svg`.
 
 **Programs run:** `hc read` (through `hc()`), and `herdr-app do layout.set` (through `exec`,
-only when task-board is installed and not yet in the layout). No network.
+only when deck is installed and not yet in the layout). No network.
 
 **Art** (`mods/quantum/`):
 - `nebula-deep.jpg`, 2560×1440, from `art/nebula.py` (seed 42;
@@ -332,9 +332,9 @@ only when task-board is installed and not yet in the layout). No network.
 ## Watch out
 
 - **A layout that names a missing mod is refused whole.** So the shipped `side-tasks` block
-  names this mod (role `tasks`, an empty stand-in) and is switched to task-board only once
-  `mods/task-board/mod.json` exists. After the switch `layouts/quantum.json` names task-board:
-  removing task-board later breaks the layout until the shipped file is put back.
+  names this mod (role `tasks`, an empty stand-in) and is switched to deck only once
+  `mods/deck/mod.json` exists. After the switch `layouts/quantum.json` names deck:
+  removing deck later breaks the layout until the shipped file is put back.
 - **A mod can't use another mod's code:** imports that resolve outside the mod's folder are
   refused, so the task board can't be embedded; the block has to point at it.
 - **`run("layout.set", …)` from the mod didn't take; `exec("herdr-app", ["do", "layout.set", …])`
@@ -387,8 +387,8 @@ only when task-board is installed and not yet in the layout). No network.
   cards.
 - An agent that runs `hc run --bg … claude "…"` shows the sub-agent indented under it; clicking
   the row peeks it; folding hides it and shows "› 1".
-- Without task-board only "Session" shows. Copy task-board into `mods/`: within 30 s "Tasks"
-  appears, `layouts/quantum.json`'s `side-tasks` names `task-board`, and the board shows in its
+- Without deck only "Session" shows. Copy deck into `mods/`: within 30 s "Tasks"
+  appears, `layouts/quantum.json`'s `side-tasks` names `deck`, and the board shows in its
   framed box.
 - With a long Claude session open, terminals stay responsive and keep their scroll position.
 - On Linux, CPU and RAM appear in the status bar within about 10 s.
